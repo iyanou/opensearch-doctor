@@ -1,13 +1,468 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
-  provider = "prisma-client"
-  output   = "../app/generated/prisma"
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
 }
 
 datasource db {
   provider = "postgresql"
+}
+
+// ─────────────────────────────────────────────────────────────
+// AUTH (NextAuth v5 required tables)
+// ─────────────────────────────────────────────────────────────
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  passwordHash  String?
+
+  plan             Plan      @default(FREE_TRIAL)
+  trialEndsAt      DateTime  @default(dbgenerated("NOW() + INTERVAL '14 days'"))
+  stripeCustomerId String?   @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  accounts             Account[]
+  sessions             Session[]
+  clusters             Cluster[]
+  agentKeys            AgentKey[]
+  apiKeys              ApiKey[]
+  subscription         Subscription?
+  teamMemberships      TeamMember[]
+  ownedTeams           Team[]                @relation("TeamOwner")
+  notificationChannels NotificationChannel[]
+
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// ─────────────────────────────────────────────────────────────
+// PLANS & BILLING
+// ─────────────────────────────────────────────────────────────
+
+enum Plan {
+  FREE_TRIAL
+  FREE
+  PRO
+}
+
+model Subscription {
+  id                   String             @id @default(cuid())
+  userId               String             @unique
+  stripeSubscriptionId String             @unique
+  stripePriceId        String
+  status               SubscriptionStatus
+  plan                 Plan
+  currentPeriodStart   DateTime
+  currentPeriodEnd     DateTime
+  cancelAtPeriodEnd    Boolean            @default(false)
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("subscriptions")
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  UNPAID
+  TRIALING
+}
+
+// ─────────────────────────────────────────────────────────────
+// TEAMS (Pro)
+// ─────────────────────────────────────────────────────────────
+
+model Team {
+  id        String   @id @default(cuid())
+  name      String
+  ownerId   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  owner    User         @relation("TeamOwner", fields: [ownerId], references: [id])
+  members  TeamMember[]
+  clusters Cluster[]
+
+  @@map("teams")
+}
+
+model TeamMember {
+  id         String    @id @default(cuid())
+  teamId     String
+  userId     String
+  role       TeamRole  @default(MEMBER)
+  invitedAt  DateTime  @default(now())
+  acceptedAt DateTime?
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, userId])
+  @@map("team_members")
+}
+
+enum TeamRole {
+  ADMIN
+  MEMBER
+  VIEWER
+}
+
+// ─────────────────────────────────────────────────────────────
+// CLUSTERS
+// ─────────────────────────────────────────────────────────────
+
+model Cluster {
+  id           String      @id @default(cuid())
+  userId       String
+  teamId       String?
+  name         String
+  endpoint     String
+  clusterUuid  String?
+  environment  Environment @default(PRODUCTION)
+  osVersion    String?
+  agentVersion String?
+  lastSeenAt   DateTime?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  webhookUrl    String?
+  webhookSecret String?
+
+  user         User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  team         Team?                @relation(fields: [teamId], references: [id])
+  sessions     DiagnosticSession[]
+  metrics      MetricSnapshot[]
+  alertRules   AlertRule[]
+  alertEvents  AlertEvent[]
+  remediations RemediationCommand[]
+  reports      Report[]
+
+  @@map("clusters")
+}
+
+enum Environment {
+  PRODUCTION
+  STAGING
+  DEVELOPMENT
+  CUSTOM
+}
+
+// ─────────────────────────────────────────────────────────────
+// AGENT KEYS (agent → SaaS authentication)
+// ─────────────────────────────────────────────────────────────
+
+model AgentKey {
+  id         String    @id @default(cuid())
+  userId     String
+  clusterId  String?
+  name       String
+  keyHash    String    @unique
+  keyPrefix  String
+  lastUsedAt DateTime?
+  createdAt  DateTime  @default(now())
+  revokedAt  DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("agent_keys")
+}
+
+// ─────────────────────────────────────────────────────────────
+// API KEYS (Pro — programmatic access)
+// ─────────────────────────────────────────────────────────────
+
+model ApiKey {
+  id         String    @id @default(cuid())
+  userId     String
+  name       String
+  keyHash    String    @unique
+  keyPrefix  String
+  lastUsedAt DateTime?
+  createdAt  DateTime  @default(now())
+  revokedAt  DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("api_keys")
+}
+
+// ─────────────────────────────────────────────────────────────
+// DIAGNOSTIC SESSIONS
+// ─────────────────────────────────────────────────────────────
+
+model DiagnosticSession {
+  id           String        @id @default(cuid())
+  clusterId    String
+  startedAt    DateTime      @default(now())
+  completedAt  DateTime?
+  healthScore  Int?
+  status       SessionStatus @default(RUNNING)
+  agentVersion String?
+  osVersion    String?
+  durationMs   Int?
+  rawData      Json?
+  createdAt    DateTime      @default(now())
+
+  cluster  Cluster   @relation(fields: [clusterId], references: [id], onDelete: Cascade)
+  findings Finding[]
+  reports  Report[]
+
+  @@index([clusterId, startedAt])
+  @@map("diagnostic_sessions")
+}
+
+enum SessionStatus {
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+// ─────────────────────────────────────────────────────────────
+// FINDINGS
+// ─────────────────────────────────────────────────────────────
+
+model Finding {
+  id             String        @id @default(cuid())
+  sessionId      String
+  category       CheckCategory
+  severity       Severity
+  title          String
+  detail         String        @db.Text
+  recommendation String        @db.Text
+  docUrl         String?
+  metadata       Json?
+  acknowledgedAt DateTime?
+  acknowledgedBy String?
+
+  session DiagnosticSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId, severity])
+  @@map("findings")
+}
+
+enum Severity {
+  CRITICAL
+  WARNING
+  INFO
+  OK
+}
+
+enum CheckCategory {
+  CLUSTER_HEALTH
+  NODES
+  INDICES
+  SHARDS
+  PERFORMANCE
+  SNAPSHOTS
+  ISM_POLICIES
+  SECURITY
+  PLUGINS
+  INGEST_PIPELINES
+  TEMPLATES
+}
+
+// ─────────────────────────────────────────────────────────────
+// METRIC SNAPSHOTS (time-series for charts)
+// ─────────────────────────────────────────────────────────────
+
+model MetricSnapshot {
+  id          String   @id @default(cuid())
+  clusterId   String
+  recordedAt  DateTime @default(now())
+  metricKey   String
+  metricValue Float
+  nodeId      String?
+
+  cluster Cluster @relation(fields: [clusterId], references: [id], onDelete: Cascade)
+
+  @@index([clusterId, metricKey, recordedAt])
+  @@map("metric_snapshots")
+}
+
+// ─────────────────────────────────────────────────────────────
+// ALERTS
+// ─────────────────────────────────────────────────────────────
+
+model AlertRule {
+  id            String       @id @default(cuid())
+  clusterId     String
+  ruleKey       AlertRuleKey
+  enabled       Boolean      @default(true)
+  threshold     Float?
+  cooldownUntil DateTime?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  cluster Cluster      @relation(fields: [clusterId], references: [id], onDelete: Cascade)
+  events  AlertEvent[]
+
+  @@unique([clusterId, ruleKey])
+  @@map("alert_rules")
+}
+
+enum AlertRuleKey {
+  CLUSTER_STATUS_RED
+  CLUSTER_STATUS_YELLOW
+  HEAP_USAGE_HIGH
+  DISK_USAGE_HIGH
+  UNASSIGNED_SHARDS
+  NO_RECENT_SNAPSHOT
+  AGENT_OFFLINE
+  HEALTH_SCORE_LOW
+}
+
+model AlertEvent {
+  id               String      @id @default(cuid())
+  clusterId        String
+  ruleId           String
+  status           AlertStatus @default(FIRING)
+  firedAt          DateTime    @default(now())
+  resolvedAt       DateTime?
+  snoozedUntil     DateTime?
+  acknowledgedAt   DateTime?
+  notifiedChannels Json?
+
+  cluster Cluster   @relation(fields: [clusterId], references: [id], onDelete: Cascade)
+  rule    AlertRule @relation(fields: [ruleId], references: [id], onDelete: Cascade)
+
+  @@index([clusterId, status])
+  @@map("alert_events")
+}
+
+enum AlertStatus {
+  FIRING
+  RESOLVED
+  SNOOZED
+}
+
+// ─────────────────────────────────────────────────────────────
+// NOTIFICATION CHANNELS
+// ─────────────────────────────────────────────────────────────
+
+model NotificationChannel {
+  id        String      @id @default(cuid())
+  userId    String
+  type      ChannelType
+  name      String
+  config    Json
+  enabled   Boolean     @default(true)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notification_channels")
+}
+
+enum ChannelType {
+  EMAIL
+  SLACK
+  WEBHOOK
+}
+
+// ─────────────────────────────────────────────────────────────
+// REMEDIATION COMMANDS (Auto-Ops)
+// ─────────────────────────────────────────────────────────────
+
+model RemediationCommand {
+  id           String            @id @default(cuid())
+  clusterId    String
+  findingTitle String
+  category     String
+  commandKey   String
+  label        String
+  method       String
+  path         String
+  body         String?
+  status       RemediationStatus @default(PENDING)
+  triggeredBy  String            @default("user")
+  createdAt    DateTime          @default(now())
+  startedAt    DateTime?
+  completedAt  DateTime?
+  result       String?
+  error        String?
+
+  cluster Cluster @relation(fields: [clusterId], references: [id], onDelete: Cascade)
+
+  @@index([clusterId, status])
+  @@map("remediation_commands")
+}
+
+enum RemediationStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+  SKIPPED
+}
+
+// ─────────────────────────────────────────────────────────────
+// REPORTS (Pro)
+// ─────────────────────────────────────────────────────────────
+
+model Report {
+  id        String     @id @default(cuid())
+  clusterId String
+  sessionId String?
+  type      ReportType @default(ON_DEMAND)
+  pdfUrl    String?
+  createdAt DateTime   @default(now())
+
+  cluster Cluster            @relation(fields: [clusterId], references: [id], onDelete: Cascade)
+  session DiagnosticSession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+
+  @@map("reports")
+}
+
+enum ReportType {
+  ON_DEMAND
+  WEEKLY
+  MONTHLY
 }
