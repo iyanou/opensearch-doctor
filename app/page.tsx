@@ -73,6 +73,20 @@ export default function LandingPage() {
             </Link>
           </div>
 
+          {/* Trust pills */}
+          <div className="flex items-center justify-center gap-3 flex-wrap mt-6">
+            {[
+              { icon: Shield, label: "Works behind VPNs & firewalls" },
+              { icon: Server, label: "No inbound port exposure" },
+              { icon: Lock, label: "Credentials stay on your server" },
+            ].map(({ icon: Icon, label }) => (
+              <span key={label} className="inline-flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/60 border border-border/60 rounded-full px-3 py-1.5">
+                <Icon className="w-3 h-3 text-emerald-500 shrink-0" />
+                {label}
+              </span>
+            ))}
+          </div>
+
           {/* Stats */}
           <div className="grid grid-cols-3 gap-8 max-w-md mx-auto mt-20 pt-10 border-t border-border/60">
             {[
@@ -161,7 +175,7 @@ export default function LandingPage() {
                 step: "02",
                 icon: Server,
                 title: "Connect to your cluster",
-                body: "Point the agent at your OpenSearch endpoint. It connects locally — your credentials never leave your network.",
+                body: "Point the agent at your OpenSearch endpoint. It connects locally over loopback or your internal network — no inbound port exposure, works behind VPNs and firewalls.",
               },
               {
                 step: "03",
@@ -225,8 +239,8 @@ export default function LandingPage() {
             },
             {
               icon: Lock,
-              title: "Credentials stay on-prem",
-              body: "The agent runs on your server and connects locally. Raw credentials and cluster data never touch our network.",
+              title: "Private clusters, zero exposure",
+              body: "The agent only needs outbound internet access — your cluster port never has to be open. Works behind VPNs, firewalls, and private networks. Credentials stay on your server.",
               color: "text-slate-600 bg-slate-100 dark:bg-slate-900/20",
             },
           ].map(({ icon: Icon, title, body, color }) => (
@@ -334,11 +348,12 @@ export default function LandingPage() {
             <Lock className="w-8 h-8 text-emerald-600" />
           </div>
           <div className="flex-1 text-center md:text-left">
-            <h3 className="text-xl font-bold mb-2">Your credentials never leave your network</h3>
+            <h3 className="text-xl font-bold mb-2">Monitor private clusters — no firewall changes needed</h3>
             <p className="text-muted-foreground text-sm leading-relaxed">
-              The agent runs on your own infrastructure and connects locally to OpenSearch.
-              Only diagnostic metrics are sent to our platform — never credentials, never raw data.
-              You stay in full control.
+              The agent runs directly on your server alongside OpenSearch. It only needs
+              outbound internet access to reach our platform — your cluster port never has
+              to be exposed. Works with private networks, VPNs, and air-gapped environments.
+              Credentials stay local; only diagnostic metrics are ever transmitted.
             </p>
           </div>
           <Link href="/login" className="shrink-0">
