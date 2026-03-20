@@ -283,6 +283,9 @@ export default function PricingPage() {
           <div className="flex items-center gap-6 text-xs text-muted-foreground">
             <Link href="/#features" className="hover:text-foreground transition-colors">Features</Link>
             <Link href="/pricing" className="text-foreground font-medium">Pricing</Link>
+            <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
+            <Link href="/terms" className="hover:text-foreground transition-colors">Terms</Link>
+            <Link href="/contact" className="hover:text-foreground transition-colors">Contact</Link>
             <Link href="/login" className="hover:text-foreground transition-colors">Sign in</Link>
           </div>
           <p className="text-xs text-muted-foreground">
