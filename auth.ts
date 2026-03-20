@@ -1,14 +1,47 @@
 import NextAuth from "next-auth";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import Google from "next-auth/providers/google";
-import Credentials from "next-auth/providers/credentials";
-import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
-import { normalizeEmail } from "@/lib/email";
+
+const isProd = process.env.NODE_ENV === "production";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: PrismaAdapter(prisma),
-  session: { strategy: "jwt" },
+  session: {
+    strategy: "jwt",
+    maxAge:    30 * 24 * 60 * 60, // 30 days
+    updateAge: 24 * 60 * 60,      // refresh token every 24 h
+  },
+  cookies: {
+    sessionToken: {
+      // __Secure- prefix is required when secure: true (browser spec)
+      name: isProd ? "__Secure-next-auth.session-token" : "next-auth.session-token",
+      options: {
+        httpOnly: true,           // not accessible via JS
+        sameSite: "lax" as const, // CSRF protection, allows OAuth redirects
+        path: "/",
+        secure: isProd,           // HTTPS only in production
+      },
+    },
+    callbackUrl: {
+      name: isProd ? "__Secure-next-auth.callback-url" : "next-auth.callback-url",
+      options: {
+        sameSite: "lax" as const,
+        path: "/",
+        secure: isProd,
+      },
+    },
+    csrfToken: {
+      // CSRF token does not need httpOnly — it is read by JS for form submissions
+      name: isProd ? "__Host-next-auth.csrf-token" : "next-auth.csrf-token",
+      options: {
+        httpOnly: true,
+        sameSite: "lax" as const,
+        path: "/",
+        secure: isProd,
+      },
+    },
+  },
   pages: {
     signIn: "/login",
     error: "/login",
@@ -17,36 +50,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-    }),
-    Credentials({
-      name: "credentials",
-      credentials: {
-        email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" },
-      },
-      async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) return null;
-
-        const user = await prisma.user.findUnique({
-          where: { email: normalizeEmail(credentials.email as string) },
-        });
-
-        if (!user || !user.passwordHash) return null;
-
-        const valid = await bcrypt.compare(
-          credentials.password as string,
-          user.passwordHash
-        );
-
-        if (!valid) return null;
-
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          image: user.image,
-        };
-      },
     }),
   ],
   callbacks: {

@@ -7,6 +7,10 @@ import { notify } from "@/lib/alerts/notify";
 // Called every 10 minutes by scheduler — checks for agents that went offline
 const OFFLINE_THRESHOLD_MS = 30 * 60 * 1000; // 30 minutes
 
+export async function GET(req: NextRequest) {
+  return POST(req);
+}
+
 export async function POST(req: NextRequest) {
   const authHeader = req.headers.get("authorization") ?? "";
   const expected = `Bearer ${process.env.CRON_SECRET ?? ""}`;

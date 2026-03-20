@@ -1,28 +1,6 @@
-export const dynamic = "force-dynamic";
-import { NextRequest, NextResponse } from "next/server";
-import bcrypt from "bcryptjs";
-import { prisma } from "@/lib/prisma";
-import { normalizeEmail } from "@/lib/email";
+import { NextResponse } from "next/server";
 
-export async function POST(req: NextRequest) {
-  const { name, email, password } = await req.json();
-
-  if (!email || !password) {
-    return NextResponse.json({ error: "Email and password required" }, { status: 400 });
-  }
-  if (password.length < 8) {
-    return NextResponse.json({ error: "Password must be at least 8 characters" }, { status: 400 });
-  }
-
-  const canonicalEmail = normalizeEmail(email);
-
-  const existing = await prisma.user.findUnique({ where: { email: canonicalEmail } });
-  if (existing) {
-    return NextResponse.json({ error: "An account with this email already exists" }, { status: 409 });
-  }
-
-  const passwordHash = await bcrypt.hash(password, 12);
-  await prisma.user.create({ data: { name, email: canonicalEmail, passwordHash } });
-
-  return NextResponse.json({ ok: true }, { status: 201 });
+// Email/password signup is disabled — authentication is Google OAuth only.
+export async function POST() {
+  return NextResponse.json({ error: "Sign up via Google OAuth" }, { status: 410 });
 }

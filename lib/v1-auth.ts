@@ -17,9 +17,12 @@ export async function authenticateApiKey(req: NextRequest): Promise<string | nul
 
   const apiKey = await prisma.apiKey.findFirst({
     where: { keyHash, revokedAt: null },
-    select: { id: true, userId: true },
+    select: { id: true, userId: true, user: { select: { plan: true } } },
   });
   if (!apiKey) return null;
+
+  // REST API is a Pro-only feature
+  if (apiKey.user.plan !== "PRO") return null;
 
   // Update last used timestamp (fire and forget)
   prisma.apiKey.update({ where: { id: apiKey.id }, data: { lastUsedAt: new Date() } }).catch(() => {});

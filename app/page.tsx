@@ -23,13 +23,13 @@ export default function LandingPage() {
           <nav className="hidden md:flex items-center gap-6 text-sm text-muted-foreground">
             <a href="#features" className="hover:text-foreground transition-colors">Features</a>
             <a href="#how-it-works" className="hover:text-foreground transition-colors">How it works</a>
-            <a href="#pricing" className="hover:text-foreground transition-colors">Pricing</a>
+            <Link href="/pricing" className="hover:text-foreground transition-colors">Pricing</Link>
           </nav>
           <div className="flex items-center gap-2">
             <Link href="/login">
               <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">Sign in</Button>
             </Link>
-            <Link href="/signup">
+            <Link href="/login">
               <Button size="sm" className="gap-1.5 shadow-sm">
                 Start free trial <ArrowRight className="w-3.5 h-3.5" />
               </Button>
@@ -61,7 +61,7 @@ export default function LandingPage() {
           </p>
 
           <div className="flex items-center justify-center gap-3 flex-wrap">
-            <Link href="/signup">
+            <Link href="/login">
               <Button size="lg" className="h-12 px-8 text-base gap-2 shadow-lg shadow-primary/25">
                 Start free trial <ArrowRight className="w-4 h-4" />
               </Button>
@@ -245,7 +245,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── Pricing ───────────────────────────────────────────── */}
-      <section id="pricing" className="bg-muted/30 border-y border-border/60 py-24">
+      <section id="pricing" className="bg-muted/30 border-y border-border/60 py-24" aria-label="Pricing">
         <div className="max-w-3xl mx-auto px-6">
           <div className="text-center mb-16">
             <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-3">Pricing</p>
@@ -279,7 +279,7 @@ export default function LandingPage() {
                   </li>
                 ))}
               </ul>
-              <Link href="/signup">
+              <Link href="/login">
                 <Button variant="outline" size="sm" className="w-full gap-1.5">
                   Start free trial <ArrowRight className="w-3.5 h-3.5" />
                 </Button>
@@ -316,7 +316,7 @@ export default function LandingPage() {
                   </li>
                 ))}
               </ul>
-              <Link href="/signup">
+              <Link href="/login">
                 <Button className="w-full bg-primary-foreground text-primary hover:bg-primary-foreground/90 gap-1.5" size="sm">
                   Start free trial <ArrowRight className="w-3.5 h-3.5" />
                 </Button>
@@ -341,7 +341,7 @@ export default function LandingPage() {
               You stay in full control.
             </p>
           </div>
-          <Link href="/signup" className="shrink-0">
+          <Link href="/login" className="shrink-0">
             <Button size="lg" className="gap-2">
               Start free trial <ArrowRight className="w-4 h-4" />
             </Button>
@@ -356,7 +356,7 @@ export default function LandingPage() {
             Know what&apos;s wrong with your cluster in 5 minutes
           </h2>
           <p className="text-white/70 mb-8 text-lg">No credit card required. Free 14-day trial.</p>
-          <Link href="/signup">
+          <Link href="/login">
             <Button
               size="lg"
               className="h-12 px-8 bg-white text-primary hover:bg-white/90 shadow-lg gap-2 font-semibold"
@@ -378,9 +378,8 @@ export default function LandingPage() {
           </div>
           <div className="flex items-center gap-6 text-xs text-muted-foreground">
             <a href="#features" className="hover:text-foreground transition-colors">Features</a>
-            <a href="#pricing" className="hover:text-foreground transition-colors">Pricing</a>
+            <Link href="/pricing" className="hover:text-foreground transition-colors">Pricing</Link>
             <Link href="/login" className="hover:text-foreground transition-colors">Sign in</Link>
-            <Link href="/signup" className="hover:text-foreground transition-colors">Sign up</Link>
           </div>
           <p className="text-xs text-muted-foreground">
             © {new Date().getFullYear()} OpenSearch Doctor. All rights reserved.

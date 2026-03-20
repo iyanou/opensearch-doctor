@@ -12,6 +12,7 @@ import { ShardsPanel } from "@/components/clusters/shards-panel";
 import { SessionHistory } from "@/components/clusters/session-history";
 import { MetricsCharts } from "@/components/clusters/metrics-chart";
 import { RemediationLog } from "@/components/clusters/remediation-log";
+import { AlertRulesPanel } from "@/components/clusters/alert-rules-panel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Clock, AlertTriangle, AlertCircle, Info, CheckCircle2 } from "lucide-react";
@@ -42,6 +43,11 @@ export default async function ClusterDetailPage({ params }: { params: Promise<{ 
       status: true, durationMs: true,
       _count: { select: { findings: true } },
     },
+  });
+
+  const alertRules = await prisma.alertRule.findMany({
+    where: { clusterId: cluster.id },
+    orderBy: { ruleKey: "asc" },
   });
 
   const recentRemediations = await prisma.remediationCommand.findMany({
@@ -107,7 +113,7 @@ export default async function ClusterDetailPage({ params }: { params: Promise<{ 
         }
       />
 
-      <div className="p-6 space-y-6 max-w-7xl">
+      <div className="p-4 md:p-6 space-y-6 max-w-7xl">
 
         {/* ── Overview row ─────────────────────────────────────── */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -138,7 +144,7 @@ export default async function ClusterDetailPage({ params }: { params: Promise<{ 
             </div>
 
             {/* Finding counts */}
-            <div className="grid grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <FindingStatPill
                 icon={<AlertCircle className="w-3.5 h-3.5" />}
                 label="Critical"
@@ -203,6 +209,19 @@ export default async function ClusterDetailPage({ params }: { params: Promise<{ 
 
         {recentSessions.length > 0 && (
           <SessionHistory sessions={recentSessions} clusterId={cluster.id} />
+        )}
+
+        {/* ── Alert Rules ───────────────────────────────────────── */}
+        {alertRules.length > 0 && (
+          <AlertRulesPanel
+            clusterId={cluster.id}
+            initialRules={alertRules.map((r) => ({
+              id: r.id,
+              ruleKey: r.ruleKey,
+              enabled: r.enabled,
+              threshold: r.threshold,
+            }))}
+          />
         )}
       </div>
     </div>

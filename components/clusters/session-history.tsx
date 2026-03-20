@@ -71,7 +71,7 @@ export function SessionHistory({ sessions, clusterId }: { sessions: Session[]; c
                   {s.healthScore}
                 </span>
               )}
-              <ChevronRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+              <ChevronRight className="w-4 h-4 text-muted-foreground opacity-60 md:opacity-0 md:group-hover:opacity-100 transition-opacity" />
             </div>
           </Link>
         ))}

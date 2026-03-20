@@ -73,6 +73,9 @@ async function upsertSubscription(sub: Stripe.Subscription, customerId: string) 
     ?? Math.floor(Date.now() / 1000) + 30 * 86400;
   const status = stripeStatusToPrisma(sub.status);
   const plan = status === "ACTIVE" || status === "TRIALING" ? "PRO" : "FREE";
+  // Newer Stripe API versions use `cancel_at` instead of `cancel_at_period_end`
+  // when cancelling via the customer portal. Treat either as a scheduled cancellation.
+  const cancelAtPeriodEnd = sub.cancel_at_period_end || (sub.cancel_at !== null && sub.cancel_at !== undefined);
 
   await prisma.$transaction([
     prisma.subscription.upsert({
@@ -85,15 +88,16 @@ async function upsertSubscription(sub: Stripe.Subscription, customerId: string) 
         plan: "PRO",
         currentPeriodStart: new Date(periodStart * 1000),
         currentPeriodEnd: new Date(periodEnd * 1000),
-        cancelAtPeriodEnd: sub.cancel_at_period_end,
+        cancelAtPeriodEnd,
       },
       update: {
         stripeSubscriptionId: sub.id,
         stripePriceId: priceId,
         status,
+        plan: status === "ACTIVE" || status === "TRIALING" ? "PRO" : "FREE",
         currentPeriodStart: new Date(periodStart * 1000),
         currentPeriodEnd: new Date(periodEnd * 1000),
-        cancelAtPeriodEnd: sub.cancel_at_period_end,
+        cancelAtPeriodEnd,
       },
     }),
     prisma.user.update({ where: { id: user.id }, data: { plan } }),

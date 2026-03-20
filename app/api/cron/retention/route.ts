@@ -6,6 +6,10 @@ import { LIMITS } from "@/lib/plan";
 
 // Called by Railway cron or external scheduler — daily
 // Protect with a shared secret to prevent public triggering
+export async function GET(req: NextRequest) {
+  return POST(req);
+}
+
 export async function POST(req: NextRequest) {
   const authHeader = req.headers.get("authorization") ?? "";
   const expected = `Bearer ${process.env.CRON_SECRET ?? ""}`;

@@ -72,7 +72,7 @@ export default async function SessionDetailPage({
         }
       />
 
-      <div className="p-6 space-y-6">
+      <div className="p-4 md:p-6 space-y-6">
         {/* Summary row */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           {/* Score card */}
@@ -118,7 +118,7 @@ export default async function SessionDetailPage({
             </div>
 
             {/* Finding counts */}
-            <div className="grid grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <FindingCountCard label="Critical" value={critCount} color="red" />
               <FindingCountCard label="Warnings" value={warnCount} color="yellow" />
               <FindingCountCard label="Info" value={infoCount} color="blue" />

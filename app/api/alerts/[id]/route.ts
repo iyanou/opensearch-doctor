@@ -37,3 +37,18 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
   return NextResponse.json({ error: "Invalid action" }, { status: 400 });
 }
+
+// DELETE /api/alerts/[id] — remove an alert event
+export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const session = await auth();
+  if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const { id } = await params;
+
+  const event = await prisma.alertEvent.findFirst({
+    where: { id, cluster: { userId: session.user.id } },
+  });
+  if (!event) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+  await prisma.alertEvent.delete({ where: { id } });
+  return NextResponse.json({ ok: true });
+}

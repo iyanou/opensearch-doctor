@@ -10,9 +10,14 @@ export async function POST() {
 
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
-    select: { id: true, email: true, stripeCustomerId: true },
+    select: { id: true, email: true, stripeCustomerId: true, plan: true, subscription: { select: { status: true } } },
   });
   if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
+
+  // Block if already on an active Pro subscription — prevents duplicate subscriptions
+  if (user.plan === "PRO" && user.subscription?.status === "ACTIVE") {
+    return NextResponse.json({ error: "Already subscribed" }, { status: 409 });
+  }
 
   // Ensure Stripe customer exists
   let customerId = user.stripeCustomerId;

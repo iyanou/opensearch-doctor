@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Zap, Lock } from "lucide-react";
 
@@ -36,7 +35,6 @@ export function UpgradeGate({ feature, children, locked }: UpgradeGateProps) {
 }
 
 export function UpgradeButton({ feature }: { feature: string }) {
-  const router = useRouter();
   const [loading, setLoading] = useState(false);
 
   async function startCheckout() {
@@ -44,7 +42,7 @@ export function UpgradeButton({ feature }: { feature: string }) {
     const res = await fetch("/api/billing/checkout", { method: "POST" });
     const data = await res.json();
     if (data.url) {
-      router.push(data.url);
+      window.location.href = data.url;
     } else {
       setLoading(false);
     }

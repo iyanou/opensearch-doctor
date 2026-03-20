@@ -4,7 +4,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")        // runtime connection
+  directUrl = env("DIRECT_DATABASE_URL") // migrations — same value as DATABASE_URL on self-hosted
 }
 
 // ─────────────────────────────────────────────────────────────

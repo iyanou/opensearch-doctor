@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  Download, Terminal, Server, Monitor, Key,
+  Rocket, Terminal, Server, Monitor, Key,
   Copy, Check, CheckCircle2, Loader2, ChevronDown, ChevronUp,
 } from "lucide-react";
 
@@ -22,6 +23,7 @@ interface AgentKey {
 }
 
 export function AgentDownloadPanel() {
+  const router = useRouter();
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [platform, setPlatform] = useState<Platform | null>(null);
   const [keys, setKeys] = useState<AgentKey[]>([]);
@@ -39,7 +41,7 @@ export function AgentDownloadPanel() {
     const res = await fetch("/api/agent/keys");
     if (res.ok) {
       const data = await res.json();
-      setKeys(data.keys ?? []);
+      setKeys(Array.isArray(data) ? data : []);
     }
   }, []);
 
@@ -54,19 +56,19 @@ export function AgentDownloadPanel() {
       const res = await fetch("/api/clusters");
       if (!res.ok) return;
       const data = await res.json();
-      const clusters: { lastSeenAt: string | null }[] = data.clusters ?? [];
-      const now = Date.now();
-      const recent = clusters.some((c) => {
-        if (!c.lastSeenAt) return false;
-        return now - new Date(c.lastSeenAt).getTime() < 2 * 60 * 1000;
-      });
-      if (recent) {
+      // API returns a plain array
+      const clusters: { id: string; agentOnline: boolean; lastSeenAt: string | null }[] =
+        Array.isArray(data) ? data : [];
+      const online = clusters.find((c) => c.agentOnline);
+      if (online) {
         setConnected(true);
         clearInterval(timer);
+        // Redirect to the cluster page after a short delay so user sees the success message
+        setTimeout(() => router.push(`/dashboard`), 2000);
       }
     }, 5000);
     return () => clearInterval(timer);
-  }, [step, connected]);
+  }, [step, connected, router]);
 
   async function createKey() {
     if (!newKeyName.trim()) return;
@@ -78,8 +80,8 @@ export function AgentDownloadPanel() {
     });
     if (res.ok) {
       const data = await res.json();
-      setRevealedKey(data.key);
-      setSelectedKey(data.key);
+      setRevealedKey(data.rawKey);
+      setSelectedKey(data.rawKey);
       setNewKeyName("");
       await loadKeys();
     }
@@ -99,12 +101,12 @@ export function AgentDownloadPanel() {
       {/* Header */}
       <div className="px-5 py-4 border-b border-border/60 flex items-center gap-2.5">
         <div className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center">
-          <Download className="w-3.5 h-3.5 text-muted-foreground" />
+          <Rocket className="w-3.5 h-3.5 text-muted-foreground" />
         </div>
         <div>
-          <h3 className="text-sm font-bold">Install Agent</h3>
+          <h3 className="text-sm font-bold">Connect your cluster</h3>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Connect your OpenSearch cluster in 3 steps
+            Follow the 3 steps below to start monitoring
           </p>
         </div>
         {/* Step indicator */}
@@ -134,27 +136,34 @@ export function AgentDownloadPanel() {
               <Key className="w-4 h-4 text-primary" />
               <h4 className="text-sm font-semibold">Create an agent key</h4>
             </div>
-            <p className="text-xs text-muted-foreground">
-              The agent uses this key to authenticate with OpenSearch Doctor.
-              Create a key now — you will need it during setup.
-            </p>
 
-            {/* Existing keys */}
-            {keys.length > 0 && (
+            {/* Existing keys — if any, allow skipping */}
+            {keys.length > 0 ? (
               <div className="space-y-1.5">
-                <p className="text-xs font-medium text-muted-foreground">Existing keys</p>
+                <p className="text-xs font-medium text-muted-foreground">You already have keys — select one or create a new one below.</p>
                 {keys.map((k) => (
-                  <div
+                  <button
                     key={k.id}
-                    className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border/60 text-sm"
+                    onClick={() => { setSelectedKey(k.keyPrefix); }}
+                    className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg border text-sm text-left transition-colors ${
+                      selectedKey === k.keyPrefix
+                        ? "border-primary bg-primary/5"
+                        : "border-border/60 hover:border-primary/40"
+                    }`}
                   >
                     <Key className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
                     <span className="font-medium">{k.name}</span>
-                    <span className="text-muted-foreground font-mono text-xs">{k.keyPrefix}...</span>
-                  </div>
+                    <span className="text-muted-foreground font-mono text-xs ml-auto">{k.keyPrefix}...</span>
+                  </button>
                 ))}
-                <p className="text-xs text-muted-foreground pt-1">
-                  Or create a new key specifically for this cluster:
+                <p className="text-xs text-muted-foreground pt-1">Or create a new key for this cluster:</p>
+              </div>
+            ) : (
+              <div className="rounded-xl bg-primary/5 border border-primary/20 px-4 py-3">
+                <p className="text-xs font-semibold text-primary mb-0.5">Start here</p>
+                <p className="text-xs text-muted-foreground">
+                  Give your key a name (e.g. <span className="font-mono">prod-server</span>), then click <strong>Create</strong>.
+                  You'll copy the key in the next step.
                 </p>
               </div>
             )}
@@ -162,11 +171,12 @@ export function AgentDownloadPanel() {
             {/* Create new key */}
             <div className="flex gap-2">
               <Input
-                placeholder="Key name, e.g. prod-cluster-1"
+                placeholder={keys.length === 0 ? "e.g. prod-server  ← type here, then click Create" : "Key name, e.g. prod-cluster-2"}
                 value={newKeyName}
                 onChange={(e) => setNewKeyName(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && createKey()}
                 className="h-9 text-sm"
+                autoFocus={keys.length === 0}
               />
               <Button onClick={createKey} disabled={creatingKey || !newKeyName.trim()} size="sm" className="h-9 shrink-0">
                 {creatingKey ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Create"}
@@ -195,7 +205,10 @@ export function AgentDownloadPanel() {
               </div>
             )}
 
-            <div className="flex justify-end pt-1">
+            <div className="flex items-center justify-end gap-3 pt-1">
+              {!revealedKey && keys.length === 0 && (
+                <p className="text-xs text-muted-foreground">Create a key above to continue</p>
+              )}
               <Button
                 onClick={() => setStep(2)}
                 disabled={!revealedKey && keys.length === 0}
@@ -350,30 +363,53 @@ Invoke-WebRequest -Uri "${RELEASE_BASE}/agent-windows-amd64.exe" -OutFile agent.
               {manualOpen && (
                 <div className="border-t border-border/60">
                   <InstallBlock
-                    title="config.yaml"
+                    title="config.yaml — full reference"
                     language="yaml"
                     copyId="config-yaml"
                     copiedBlock={copiedBlock}
                     onCopy={copy}
                     code={`cluster:
+  # Display name shown in your dashboard
   name: "my-cluster"
+
+  # Full URL of your OpenSearch cluster
   endpoint: "https://my-opensearch:9200"
+
+  # Authentication — use username+password OR api_key (not both)
   username: "admin"
   password: "your-password"
+  # api_key: "your-opensearch-api-key"
+
+  # TLS / SSL certificate verification
+  # true  → skip verification (easiest, works with self-signed certs)
+  # false → verify certificate (recommended for production)
   tls_skip_verify: true
 
+  # Optional: path to your CA certificate file (PEM format)
+  # Required only when tls_skip_verify is false and you use a private CA
+  # ca_cert_path: "/etc/ssl/certs/my-ca.crt"
+
+  # Environment label shown in the dashboard (production/staging/development)
+  environment: "production"
+
 saas:
-  api_url: "https://app.opensearchdoctor.com"
+  # Your OpenSearch Doctor agent key — created in Settings → Quick Start
   api_key: "${displayKey}"
 
 agent:
+  # How often to run a full diagnostic (in minutes). Default: 30
   interval_minutes: 30
+
+  # How often to send a heartbeat to the dashboard (in seconds). Default: 60
   heartbeat_seconds: 60`}
                   />
-                  <div className="px-4 pb-3">
+                  <div className="px-4 pb-3 space-y-2">
                     <p className="text-xs text-muted-foreground">
                       Save as <code className="font-mono bg-muted px-1 rounded">config.yaml</code> then run:{" "}
                       <code className="font-mono bg-muted px-1 rounded">./agent --config config.yaml</code>
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      After editing the config, restart the agent or its service for changes to take effect.
                     </p>
                   </div>
                 </div>
@@ -391,7 +427,7 @@ agent:
                   <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
                   <div>
                     <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">Agent connected!</p>
-                    <p className="text-xs text-emerald-600 dark:text-emerald-400">Your cluster is now being monitored. Go to the dashboard to see it.</p>
+                    <p className="text-xs text-emerald-600 dark:text-emerald-400">Your cluster is now being monitored. Taking you to the dashboard…</p>
                   </div>
                 </>
               ) : (

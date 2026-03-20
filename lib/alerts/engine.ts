@@ -4,10 +4,11 @@
  *
  * State machine: a rule is FIRING until the condition clears → RESOLVED.
  * Cooldown: won't re-fire within 4 hours of last notification.
+ * Batching: all state changes from one run are sent as a single notification.
  */
 import { prisma } from "@/lib/prisma";
-import type { AlertRuleKey } from "@prisma/client";
-import { notify } from "./notify";
+import type { AlertRuleKey, AlertRule, AlertEvent } from "@prisma/client";
+import { notifyBatch } from "./notify";
 import type { AlertContext } from "./types";
 
 export type { AlertContext };
@@ -30,6 +31,9 @@ export async function evaluateAlerts(ctx: AlertContext): Promise<void> {
     where: { userId: ctx.userId, enabled: true },
   });
 
+  const newlyFired: Array<{ event: AlertEvent; rule: AlertRule }> = [];
+  const newlyResolved: Array<{ event: AlertEvent; rule: AlertRule }> = [];
+
   for (const rule of rules) {
     const isFiring = evaluateRule(rule.ruleKey, rule.threshold, ctx);
     const existingEvent = rule.events[0] ?? null;
@@ -49,26 +53,25 @@ export async function evaluateAlerts(ctx: AlertContext): Promise<void> {
         const event = await prisma.alertEvent.create({
           data: { clusterId: ctx.clusterId, ruleId: rule.id, status: "FIRING" },
         });
-        await notify({ event, rule, ctx, channels, transition: "firing" });
+        newlyFired.push({ event, rule });
       }
     } else if (!isFiring && alreadyFiring && existingEvent!.status === "FIRING") {
       await prisma.alertEvent.update({
         where: { id: existingEvent!.id },
         data: { status: "RESOLVED", resolvedAt: new Date() },
       });
-      await notify({ event: existingEvent!, rule, ctx, channels, transition: "resolved" });
+      newlyResolved.push({ event: existingEvent!, rule });
     }
     // SNOOZED events: check if snooze has expired
     else if (existingEvent?.status === "SNOOZED") {
       const snoozedUntil = existingEvent.snoozedUntil;
       if (snoozedUntil && new Date(snoozedUntil) < new Date()) {
         if (isFiring) {
-          // Snooze expired and still firing — update back to FIRING and re-notify
           await prisma.alertEvent.update({
             where: { id: existingEvent.id },
             data: { status: "FIRING", snoozedUntil: null },
           });
-          await notify({ event: existingEvent, rule, ctx, channels, transition: "firing" });
+          newlyFired.push({ event: existingEvent, rule });
         } else {
           await prisma.alertEvent.update({
             where: { id: existingEvent.id },
@@ -77,6 +80,11 @@ export async function evaluateAlerts(ctx: AlertContext): Promise<void> {
         }
       }
     }
+  }
+
+  // Send one batched notification for all changes in this run
+  if (newlyFired.length > 0 || newlyResolved.length > 0) {
+    await notifyBatch({ newlyFired, newlyResolved, ctx, channels });
   }
 }
 

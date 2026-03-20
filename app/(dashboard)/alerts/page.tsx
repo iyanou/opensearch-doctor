@@ -34,7 +34,7 @@ export default async function AlertsPage() {
         title="Alerts"
         description="Proactive notifications across all your clusters"
       />
-      <div className="p-6 max-w-4xl space-y-8">
+      <div className="p-4 md:p-6 max-w-4xl space-y-8">
         {firing.length === 0 && recent.length === 0 ? (
           <AllClearState />
         ) : (

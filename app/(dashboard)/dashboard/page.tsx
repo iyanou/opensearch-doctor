@@ -8,7 +8,8 @@ import { SeverityBadge } from "@/components/clusters/severity-badge";
 import { WelcomeWizard } from "@/components/dashboard/welcome-wizard";
 import { Button } from "@/components/ui/button";
 import { formatDistanceToNow } from "@/lib/format";
-import { Plus, ServerCrash, TrendingUp, AlertTriangle, Wifi } from "lucide-react";
+import { Plus, ServerCrash, TrendingUp, AlertTriangle, Wifi, TrendingDown, Minus, HeartPulse } from "lucide-react";
+import { ClusterDeleteButton } from "@/components/clusters/cluster-delete-button";
 
 export default async function DashboardPage({
   searchParams,
@@ -27,7 +28,7 @@ export default async function DashboardPage({
       sessions: {
         where: { status: "COMPLETED" },
         orderBy: { startedAt: "desc" },
-        take: 1,
+        take: 2,
         select: {
           id: true, healthScore: true, startedAt: true,
           findings: { select: { severity: true } },
@@ -47,6 +48,11 @@ export default async function DashboardPage({
     (c) => c.lastSeenAt && now.getTime() - new Date(c.lastSeenAt).getTime() < 10 * 60 * 1000
   ).length;
 
+  const clustersWithScore = clusters.filter((c) => c.sessions[0]?.healthScore != null);
+  const avgHealthScore = clustersWithScore.length > 0
+    ? Math.round(clustersWithScore.reduce((sum, c) => sum + (c.sessions[0]!.healthScore ?? 0), 0) / clustersWithScore.length)
+    : null;
+
   return (
     <div className="min-h-full">
       {isFirstVisit && <WelcomeWizard />}
@@ -63,18 +69,24 @@ export default async function DashboardPage({
         }
       />
 
-      <div className="p-6">
+      <div className="p-4 md:p-6">
         {clusters.length === 0 ? (
           <EmptyState />
         ) : (
           <>
             {/* Summary stats */}
-            <div className="grid grid-cols-3 gap-4 mb-6">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
               <StatCard
                 icon={<TrendingUp className="w-5 h-5 text-primary" />}
                 label="Total clusters"
                 value={clusters.length}
                 bg="bg-primary/10"
+              />
+              <StatCard
+                icon={<Wifi className="w-5 h-5 text-emerald-500" />}
+                label="Agents online"
+                value={`${agentsOnline} / ${clusters.length}`}
+                bg="bg-emerald-50 dark:bg-emerald-500/10"
               />
               <StatCard
                 icon={<AlertTriangle className="w-5 h-5 text-red-500" />}
@@ -84,10 +96,10 @@ export default async function DashboardPage({
                 bg="bg-red-50 dark:bg-red-500/10"
               />
               <StatCard
-                icon={<Wifi className="w-5 h-5 text-emerald-500" />}
-                label="Agents online"
-                value={`${agentsOnline} / ${clusters.length}`}
-                bg="bg-emerald-50 dark:bg-emerald-500/10"
+                icon={<HeartPulse className="w-5 h-5 text-blue-500" />}
+                label="Avg health score"
+                value={avgHealthScore ?? "—"}
+                bg="bg-blue-50 dark:bg-blue-500/10"
               />
             </div>
 
@@ -95,12 +107,16 @@ export default async function DashboardPage({
             <div className="grid gap-4 grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
               {clusters.map((cluster) => {
                 const latestSession = cluster.sessions[0] ?? null;
+                const prevSession = cluster.sessions[1] ?? null;
                 const agentOnline =
                   cluster.lastSeenAt
                     ? now.getTime() - new Date(cluster.lastSeenAt).getTime() < 10 * 60 * 1000
                     : false;
                 const critCount = latestSession?.findings.filter((f) => f.severity === "CRITICAL").length ?? 0;
                 const warnCount = latestSession?.findings.filter((f) => f.severity === "WARNING").length ?? 0;
+                const scoreDiff = (latestSession?.healthScore != null && prevSession?.healthScore != null)
+                  ? latestSession.healthScore - prevSession.healthScore
+                  : null;
 
                 return (
                   <Link key={cluster.id} href={`/clusters/${cluster.id}`}>
@@ -116,7 +132,22 @@ export default async function DashboardPage({
                           </div>
                           <p className="text-xs text-muted-foreground truncate font-mono">{cluster.endpoint}</p>
                         </div>
-                        <HealthScore score={latestSession?.healthScore ?? null} size="sm" />
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          {scoreDiff !== null && (
+                            <span className={`flex items-center gap-0.5 text-[11px] font-semibold ${
+                              scoreDiff > 0 ? "text-emerald-600" : scoreDiff < 0 ? "text-red-500" : "text-muted-foreground"
+                            }`}>
+                              {scoreDiff > 0
+                                ? <TrendingUp className="w-3 h-3" />
+                                : scoreDiff < 0
+                                ? <TrendingDown className="w-3 h-3" />
+                                : <Minus className="w-3 h-3" />}
+                              {scoreDiff > 0 ? `+${scoreDiff}` : scoreDiff}
+                            </span>
+                          )}
+                          <HealthScore score={latestSession?.healthScore ?? null} size="sm" />
+                          <ClusterDeleteButton clusterId={cluster.id} clusterName={cluster.name} />
+                        </div>
                       </div>
 
                       {/* Status row */}
@@ -128,13 +159,20 @@ export default async function DashboardPage({
 
                       {/* Footer */}
                       <div className="flex items-center justify-between pt-3 border-t border-border/40 mt-auto">
-                        <p className="text-xs text-muted-foreground">
-                          {latestSession
-                            ? `Last run ${formatDistanceToNow(new Date(latestSession.startedAt))}`
-                            : "No diagnostic runs yet"}
-                        </p>
-                        <span className="text-xs text-primary opacity-0 group-hover:opacity-100 transition-opacity font-medium">
-                          View details →
+                        <div className="flex items-center gap-2 min-w-0">
+                          <p className="text-xs text-muted-foreground truncate">
+                            {latestSession
+                              ? `Last run ${formatDistanceToNow(new Date(latestSession.startedAt))}`
+                              : "No diagnostic runs yet"}
+                          </p>
+                          {cluster.osVersion && (
+                            <span className="text-[10px] font-mono text-muted-foreground/60 bg-muted/50 px-1.5 py-0.5 rounded shrink-0">
+                              OS {cluster.osVersion}
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-xs text-primary opacity-60 md:opacity-0 md:group-hover:opacity-100 transition-opacity font-medium shrink-0 ml-2">
+                          View →
                         </span>
                       </div>
                     </div>

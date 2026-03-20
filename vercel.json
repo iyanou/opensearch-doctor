@@ -1,0 +1,26 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/agent-offline",
+      "schedule": "*/10 * * * *"
+    },
+    {
+      "path": "/api/cron/retention",
+      "schedule": "0 3 * * *"
+    }
+  ],
+  "functions": {
+    "app/api/clusters/[id]/sessions/[sessionId]/report/route.ts": {
+      "maxDuration": 60
+    },
+    "app/api/cron/agent-offline/route.ts": {
+      "maxDuration": 60
+    },
+    "app/api/cron/retention/route.ts": {
+      "maxDuration": 60
+    },
+    "app/api/agent/diagnostics/route.ts": {
+      "maxDuration": 30
+    }
+  }
+}

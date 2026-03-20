@@ -106,7 +106,7 @@ export function IndicesTable({ indices }: { indices: IndexRow[] }) {
                 <td className="px-4 py-3 font-mono text-xs max-w-[220px]">
                   <div className="flex items-center gap-1.5">
                     {idx.isReadOnly && (
-                      <Lock className="w-3 h-3 text-red-500 shrink-0" title="Read-only" />
+                      <Lock className="w-3 h-3 text-red-500 shrink-0" />
                     )}
                     <span className="truncate" title={idx.name}>{idx.name}</span>
                   </div>

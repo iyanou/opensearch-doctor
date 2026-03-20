@@ -1,0 +1,18 @@
+# OpenSearch Doctor — system cron jobs for self-hosted production
+#
+# HOW TO INSTALL:
+#   1. Edit with:  crontab -e
+#   2. Paste the two lines below (replace YOUR_CRON_SECRET and the URL).
+#   3. Save and exit.
+#
+# Verify it is registered with: crontab -l
+# View logs with:               tail -f /var/log/osd-cron.log
+#
+# The app must be running (next start) before cron jobs can reach it.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Check for offline agents — every 10 minutes
+*/10 * * * * curl -s -X GET -H "Authorization: Bearer YOUR_CRON_SECRET" http://localhost:3000/api/cron/agent-offline >> /var/log/osd-cron.log 2>&1
+
+# Data retention cleanup — daily at 3 AM
+0 3 * * * curl -s -X GET -H "Authorization: Bearer YOUR_CRON_SECRET" http://localhost:3000/api/cron/retention >> /var/log/osd-cron.log 2>&1

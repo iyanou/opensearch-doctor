@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, Zap, ExternalLink, CreditCard, Clock, AlertCircle, XCircle } from "lucide-react";
+import { CheckCircle2, Zap, ExternalLink, CreditCard, Clock, AlertCircle, XCircle, AlertTriangle } from "lucide-react";
 import type { Plan } from "@prisma/client";
 
 interface BillingPanelProps {
@@ -11,6 +11,7 @@ interface BillingPanelProps {
   isTrialActive: boolean;
   isTrialExpired: boolean;
   hasSubscription: boolean;
+  subscriptionStatus?: string | null;
   currentPeriodEnd: Date | null;
   cancelAtPeriodEnd: boolean;
   successMessage?: boolean;
@@ -41,6 +42,7 @@ export function BillingPanel({
   isTrialActive,
   isTrialExpired,
   hasSubscription,
+  subscriptionStatus,
   currentPeriodEnd,
   cancelAtPeriodEnd,
   successMessage,
@@ -65,6 +67,8 @@ export function BillingPanel({
   }
 
   const isPro = plan === "PRO";
+  const isPastDue = isPro && subscriptionStatus === "PAST_DUE";
+  const isCancelledSub = plan === "FREE" && !isTrialExpired;
 
   return (
     <div className="rounded-xl border border-border/60 bg-card overflow-hidden">
@@ -115,6 +119,37 @@ export function BillingPanel({
           </div>
         )}
 
+        {isPastDue && (
+          <div className="flex items-start gap-2.5 p-3.5 rounded-xl bg-orange-50 dark:bg-orange-500/10 border border-orange-200 dark:border-orange-500/20">
+            <AlertTriangle className="w-4 h-4 text-orange-600 dark:text-orange-400 shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-semibold text-orange-800 dark:text-orange-300">Payment failed</p>
+              <p className="text-xs text-orange-700 dark:text-orange-400 mt-0.5">
+                Your last payment didn&apos;t go through. Update your payment method to keep Pro access.
+              </p>
+              <button
+                onClick={openPortal}
+                disabled={portalLoading}
+                className="text-xs font-semibold text-orange-700 dark:text-orange-400 underline underline-offset-2 mt-1.5 hover:opacity-80"
+              >
+                {portalLoading ? "Opening…" : "Update payment method →"}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {isCancelledSub && (
+          <div className="flex items-start gap-2.5 p-3.5 rounded-xl bg-muted/60 border border-border/60">
+            <XCircle className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-semibold">Subscription ended</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Your Pro subscription is no longer active. Resubscribe to restore full access.
+              </p>
+            </div>
+          </div>
+        )}
+
         {isPro && currentPeriodEnd && cancelAtPeriodEnd && (
           <div className="flex items-start gap-2.5 p-3.5 rounded-xl bg-yellow-50 dark:bg-yellow-500/10 border border-yellow-200 dark:border-yellow-500/20">
             <XCircle className="w-4 h-4 text-yellow-600 dark:text-yellow-400 shrink-0 mt-0.5" />
@@ -137,7 +172,9 @@ export function BillingPanel({
         {!isPro ? (
           <div className="grid sm:grid-cols-2 gap-6 rounded-xl border border-border/60 p-5 bg-muted/20">
             <div>
-              <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3">Your trial includes</p>
+              <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3">
+                {isCancelledSub ? "What you had" : "Your trial includes"}
+              </p>
               <ul className="space-y-2">
                 {TRIAL_FEATURES.map((f) => (
                   <li key={f} className="flex items-center gap-2 text-sm">
