@@ -38,13 +38,13 @@ const securityHeaders = [
         : "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com",
 
       // Tailwind + shadcn inject inline styles
-      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+      "style-src 'self' 'unsafe-inline'",
 
       // Self + Google profile pictures (OAuth avatars)
       "img-src 'self' data: blob: https://*.googleusercontent.com https://lh3.googleusercontent.com",
 
-      // Google Fonts
-      "font-src 'self' https://fonts.gstatic.com",
+      // Fonts are self-hosted via next/font (Geist) — no external font CDN needed
+      "font-src 'self'",
 
       // API calls stay on same origin; Google for OAuth token exchange
       "connect-src 'self' https://accounts.google.com",

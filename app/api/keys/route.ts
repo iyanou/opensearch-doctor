@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { getLimits } from "@/lib/plan";
 import { randomBytes, createHash } from "crypto";
 
 export async function GET() {
@@ -20,6 +21,11 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const user = await prisma.user.findUnique({ where: { id: session.user.id }, select: { plan: true } });
+  if (!user || !getLimits(user.plan).api) {
+    return NextResponse.json({ error: "API key access requires a Pro or Scale plan." }, { status: 403 });
+  }
 
   const { name } = await req.json();
   if (!name?.trim()) return NextResponse.json({ error: "Name required" }, { status: 400 });

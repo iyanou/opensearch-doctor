@@ -7,8 +7,9 @@ export async function GET() {
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
+  // F9 — exclude soft-deleted clusters
   const clusters = await prisma.cluster.findMany({
-    where: { userId: session.user.id },
+    where: { userId: session.user.id, deletedAt: null },
     orderBy: { createdAt: "desc" },
     include: {
       sessions: {

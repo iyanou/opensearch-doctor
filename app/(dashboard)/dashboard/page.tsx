@@ -6,9 +6,11 @@ import { HealthScore } from "@/components/clusters/health-score";
 import { AgentStatusBadge } from "@/components/clusters/agent-status-badge";
 import { SeverityBadge } from "@/components/clusters/severity-badge";
 import { WelcomeWizard } from "@/components/dashboard/welcome-wizard";
+import { ConnectClusterButton } from "@/components/dashboard/connect-cluster-button";
 import { Button } from "@/components/ui/button";
 import { formatDistanceToNow } from "@/lib/format";
-import { Plus, ServerCrash, TrendingUp, AlertTriangle, Wifi, TrendingDown, Minus, HeartPulse } from "lucide-react";
+import { getLimits } from "@/lib/plan";
+import { ServerCrash, TrendingUp, AlertTriangle, Wifi, TrendingDown, Minus, HeartPulse, Plus } from "lucide-react";
 import { ClusterDeleteButton } from "@/components/clusters/cluster-delete-button";
 
 export default async function DashboardPage({
@@ -20,6 +22,9 @@ export default async function DashboardPage({
   const userId = session!.user!.id!;
   const sp = await searchParams;
   const isFirstVisit = sp.welcome === "1";
+
+  const userPlan = await prisma.user.findUnique({ where: { id: userId }, select: { plan: true } });
+  const planLimits = getLimits(userPlan?.plan ?? "FREE_TRIAL");
 
   const clusters = await prisma.cluster.findMany({
     where: { userId },
@@ -53,6 +58,10 @@ export default async function DashboardPage({
     ? Math.round(clustersWithScore.reduce((sum, c) => sum + (c.sessions[0]!.healthScore ?? 0), 0) / clustersWithScore.length)
     : null;
 
+  const hasAnyClusters = clusters.length > 0;
+  const hasAnySession = clusters.some((c) => c.sessions.length > 0);
+  const showOnboarding = !hasAnyClusters || !hasAnySession;
+
   return (
     <div className="min-h-full">
       {isFirstVisit && <WelcomeWizard />}
@@ -61,15 +70,20 @@ export default async function DashboardPage({
         title="Clusters"
         description="Monitor your OpenSearch clusters"
         action={
-          <Link href="/settings?tab=keys">
-            <Button size="sm" className="gap-1.5 shadow-sm">
-              <Plus className="w-3.5 h-3.5" /> Connect cluster
-            </Button>
-          </Link>
+          <ConnectClusterButton
+            atLimit={planLimits.maxClusters !== Infinity && clusters.length >= planLimits.maxClusters}
+            currentPlan={userPlan?.plan ?? "FREE"}
+            clusterCount={clusters.length}
+            clusterLimit={planLimits.maxClusters === Infinity ? 999 : planLimits.maxClusters}
+          />
         }
       />
 
       <div className="p-4 md:p-6">
+        {showOnboarding && (
+          <OnboardingChecklist hasCluster={hasAnyClusters} hasSession={hasAnySession} />
+        )}
+
         {clusters.length === 0 ? (
           <EmptyState />
         ) : (
@@ -240,6 +254,54 @@ function EmptyState() {
           <Plus className="w-4 h-4" /> Connect your first cluster
         </Button>
       </Link>
+    </div>
+  );
+}
+
+function OnboardingChecklist({ hasCluster, hasSession }: { hasCluster: boolean; hasSession: boolean }) {
+  const steps = [
+    { label: "Create your account", done: true },
+    {
+      label: "Install the agent & connect a cluster",
+      done: hasCluster,
+      cta: !hasCluster ? { text: "Generate API key →", href: "/settings?tab=keys" } : undefined,
+    },
+    {
+      label: "First diagnostic run",
+      done: hasSession,
+      note: !hasSession && hasCluster ? "Waiting — agent runs automatically every 6h" : undefined,
+    },
+  ];
+
+  return (
+    <div className="rounded-xl border border-border/60 bg-card p-5 mb-6">
+      <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-4">Getting started</p>
+      <ol className="space-y-3">
+        {steps.map((step, i) => (
+          <li key={i} className="flex items-start gap-3">
+            <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 mt-0.5 text-[10px] font-bold ${
+              step.done
+                ? "bg-emerald-100 dark:bg-emerald-500/15 text-emerald-600"
+                : "bg-muted border border-border/60 text-muted-foreground"
+            }`}>
+              {step.done ? "✓" : i + 1}
+            </div>
+            <div className="flex-1 min-w-0">
+              <span className={`text-sm font-medium ${step.done ? "line-through text-muted-foreground" : ""}`}>
+                {step.label}
+              </span>
+              {step.note && (
+                <p className="text-xs text-muted-foreground mt-0.5">{step.note}</p>
+              )}
+              {step.cta && (
+                <Link href={step.cta.href} className="text-xs font-semibold text-primary hover:underline mt-0.5 block">
+                  {step.cta.text}
+                </Link>
+              )}
+            </div>
+          </li>
+        ))}
+      </ol>
     </div>
   );
 }

@@ -1,12 +1,9 @@
 generator client {
-  provider        = "prisma-client-js"
-  previewFeatures = ["driverAdapters"]
+  provider = "prisma-client-js"
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")        // runtime connection
-  directUrl = env("DIRECT_DATABASE_URL") // migrations — same value as DATABASE_URL on self-hosted
+  provider = "postgresql"
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -22,7 +19,7 @@ model User {
   passwordHash  String?
 
   plan             Plan      @default(FREE_TRIAL)
-  trialEndsAt      DateTime  @default(dbgenerated("NOW() + INTERVAL '14 days'"))
+  trialEndsAt      DateTime? // null = trial not started; set on first agent connection (+14 days)
   stripeCustomerId String?   @unique
 
   createdAt DateTime @default(now())
@@ -37,6 +34,7 @@ model User {
   teamMemberships      TeamMember[]
   ownedTeams           Team[]                @relation("TeamOwner")
   notificationChannels NotificationChannel[]
+  auditLogs            AuditLog[]
 
   @@map("users")
 }
@@ -86,9 +84,10 @@ model VerificationToken {
 // ─────────────────────────────────────────────────────────────
 
 enum Plan {
-  FREE_TRIAL
-  FREE
-  PRO
+  FREE_TRIAL // 14-day trial (starts on first agent connection): full access, 30-day retention
+  STARTER    // $39/month: up to 3 clusters, 30-day retention, email alerts
+  PRO        // $99/month: up to 10 clusters, 90-day retention, all channels
+  SCALE      // $199/month: unlimited clusters, 180-day retention, all channels
 }
 
 model Subscription {
@@ -118,7 +117,7 @@ enum SubscriptionStatus {
 }
 
 // ─────────────────────────────────────────────────────────────
-// TEAMS (Pro)
+// TEAMS
 // ─────────────────────────────────────────────────────────────
 
 model Team {
@@ -158,6 +157,7 @@ enum TeamRole {
 
 // ─────────────────────────────────────────────────────────────
 // CLUSTERS
+// F9: deletedAt for soft deletes (30-day recovery window)
 // ─────────────────────────────────────────────────────────────
 
 model Cluster {
@@ -171,21 +171,24 @@ model Cluster {
   osVersion    String?
   agentVersion String?
   lastSeenAt   DateTime?
+  deletedAt    DateTime?   // F9 — soft delete; null = active
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
 
   webhookUrl    String?
   webhookSecret String?
 
-  user         User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
-  team         Team?                @relation(fields: [teamId], references: [id])
-  sessions     DiagnosticSession[]
-  metrics      MetricSnapshot[]
-  alertRules   AlertRule[]
-  alertEvents  AlertEvent[]
-  remediations RemediationCommand[]
-  reports      Report[]
+  user            User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  team            Team?                @relation(fields: [teamId], references: [id])
+  sessions        DiagnosticSession[]
+  metrics         MetricSnapshot[]
+  alertRules      AlertRule[]
+  alertEvents     AlertEvent[]
+  remediations    RemediationCommand[]
+  reports         Report[]
+  webhookDeliveries WebhookDelivery[]  // F3
 
+  @@index([userId, deletedAt])          // F8 — fast active-cluster lookups
   @@map("clusters")
 }
 
@@ -197,7 +200,7 @@ enum Environment {
 }
 
 // ─────────────────────────────────────────────────────────────
-// AGENT KEYS (agent → SaaS authentication)
+// AGENT KEYS
 // ─────────────────────────────────────────────────────────────
 
 model AgentKey {
@@ -213,11 +216,12 @@ model AgentKey {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId])                     // F8
   @@map("agent_keys")
 }
 
 // ─────────────────────────────────────────────────────────────
-// API KEYS (Pro — programmatic access)
+// API KEYS (Pro+)
 // ─────────────────────────────────────────────────────────────
 
 model ApiKey {
@@ -232,31 +236,36 @@ model ApiKey {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId])                     // F8
   @@map("api_keys")
 }
 
 // ─────────────────────────────────────────────────────────────
 // DIAGNOSTIC SESSIONS
+// F16: idempotencyKey prevents duplicate submissions from agent retries
 // ─────────────────────────────────────────────────────────────
 
 model DiagnosticSession {
-  id           String        @id @default(cuid())
-  clusterId    String
-  startedAt    DateTime      @default(now())
-  completedAt  DateTime?
-  healthScore  Int?
-  status       SessionStatus @default(RUNNING)
-  agentVersion String?
-  osVersion    String?
-  durationMs   Int?
-  rawData      Json?
-  createdAt    DateTime      @default(now())
+  id             String        @id @default(cuid())
+  clusterId      String
+  startedAt      DateTime      @default(now())
+  completedAt    DateTime?
+  healthScore    Int?
+  status         SessionStatus @default(RUNNING)
+  agentVersion   String?
+  osVersion      String?
+  durationMs     Int?
+  rawData        Json?
+  idempotencyKey String?       @unique // F16 — prevents duplicate submissions
+  createdAt      DateTime      @default(now())
 
   cluster  Cluster   @relation(fields: [clusterId], references: [id], onDelete: Cascade)
   findings Finding[]
   reports  Report[]
 
   @@index([clusterId, startedAt])
+  @@index([clusterId, status])          // F8
+  @@index([clusterId, completedAt])     // F8
   @@map("diagnostic_sessions")
 }
 
@@ -311,7 +320,7 @@ enum CheckCategory {
 }
 
 // ─────────────────────────────────────────────────────────────
-// METRIC SNAPSHOTS (time-series for charts)
+// METRIC SNAPSHOTS (time-series)
 // ─────────────────────────────────────────────────────────────
 
 model MetricSnapshot {
@@ -375,6 +384,8 @@ model AlertEvent {
   rule    AlertRule @relation(fields: [ruleId], references: [id], onDelete: Cascade)
 
   @@index([clusterId, status])
+  @@index([ruleId])                     // F8
+  @@index([clusterId, firedAt])         // F8
   @@map("alert_events")
 }
 
@@ -400,6 +411,7 @@ model NotificationChannel {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId])                     // F8
   @@map("notification_channels")
 }
 
@@ -410,7 +422,28 @@ enum ChannelType {
 }
 
 // ─────────────────────────────────────────────────────────────
-// REMEDIATION COMMANDS (Auto-Ops)
+// WEBHOOK DELIVERIES (F3 — outbound webhook retry tracking)
+// ─────────────────────────────────────────────────────────────
+
+model WebhookDelivery {
+  id          String    @id @default(cuid())
+  clusterId   String
+  payload     Json
+  status      String    @default("PENDING") // PENDING | DELIVERED | FAILED
+  attempts    Int       @default(0)
+  nextRetryAt DateTime?
+  lastError   String?
+  createdAt   DateTime  @default(now())
+  deliveredAt DateTime?
+
+  cluster Cluster @relation(fields: [clusterId], references: [id], onDelete: Cascade)
+
+  @@index([status, nextRetryAt])        // cron query
+  @@map("webhook_deliveries")
+}
+
+// ─────────────────────────────────────────────────────────────
+// REMEDIATION COMMANDS
 // ─────────────────────────────────────────────────────────────
 
 model RemediationCommand {
@@ -446,7 +479,7 @@ enum RemediationStatus {
 }
 
 // ─────────────────────────────────────────────────────────────
-// REPORTS (Pro)
+// REPORTS
 // ─────────────────────────────────────────────────────────────
 
 model Report {
@@ -467,4 +500,25 @@ enum ReportType {
   ON_DEMAND
   WEEKLY
   MONTHLY
+}
+
+// ─────────────────────────────────────────────────────────────
+// AUDIT LOG (F11)
+// ─────────────────────────────────────────────────────────────
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String
+  action     String   // e.g. "cluster.delete", "alert_rule.update", "api_key.revoke"
+  entityId   String?
+  entityType String?
+  meta       Json?
+  ip         String?
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([entityType, entityId])
+  @@map("audit_logs")
 }

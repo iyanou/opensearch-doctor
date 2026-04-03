@@ -4,32 +4,60 @@ import { useState } from "react";
 import { Zap, Clock, CheckCircle2, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-const PRO_FEATURES = [
-  "Unlimited clusters",
-  "All 11 check categories & 50+ rules",
-  "90-day data retention",
-  "Alerts (email, Slack, webhook)",
+const PLANS = [
+  {
+    key: "starter",
+    name: "Starter",
+    price: "$39",
+    description: "Up to 3 clusters · Email alerts · 30-day retention",
+    popular: false,
+  },
+  {
+    key: "pro",
+    name: "Pro",
+    price: "$99",
+    description: "Up to 10 clusters · All alert channels · 90-day retention · API",
+    popular: true,
+  },
+  {
+    key: "scale",
+    name: "Scale",
+    price: "$199",
+    description: "Unlimited clusters · All channels · 180-day retention",
+    popular: false,
+  },
+];
+
+const WHAT_YOU_GET = [
+  "All 11 diagnostic check categories",
+  "50+ automated analysis rules",
+  "Proactive alerts (email, Slack, webhook)",
+  "Metric charts and trends",
   "PDF reports",
-  "REST API access",
+  "REST API access (Pro & Scale)",
 ];
 
 export function ExpiredGate() {
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState<string | null>(null);
 
-  async function startCheckout() {
-    setLoading(true);
-    const res = await fetch("/api/billing/checkout", { method: "POST" });
+  async function startCheckout(plan: string) {
+    setLoading(plan);
+    const res = await fetch("/api/billing/checkout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ plan, billing: "monthly" }),
+    });
     const data = await res.json();
     if (data.url) {
       window.location.href = data.url;
     } else {
-      setLoading(false);
+      setLoading(null);
     }
   }
 
   return (
     <div className="flex-1 flex items-center justify-center p-6 bg-background">
-      <div className="w-full max-w-md space-y-6">
+      <div className="w-full max-w-2xl space-y-8">
 
         {/* Icon + heading */}
         <div className="text-center space-y-3">
@@ -37,47 +65,77 @@ export function ExpiredGate() {
             <Clock className="w-7 h-7 text-muted-foreground" />
           </div>
           <h2 className="text-2xl font-bold tracking-tight">Your trial has ended</h2>
-          <p className="text-muted-foreground text-sm leading-relaxed">
-            Your 14-day free trial is over. Upgrade to Pro to restore full access
+          <p className="text-muted-foreground text-sm leading-relaxed max-w-sm mx-auto">
+            Your 14-day free trial is over. Choose a plan to restore full access
             to your clusters and diagnostic data.
           </p>
         </div>
 
-        {/* Price + CTA */}
-        <div className="rounded-2xl border border-primary bg-primary text-primary-foreground p-6 space-y-5">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-widest text-primary-foreground/60 mb-1">Pro Plan</p>
-            <div className="flex items-end gap-1.5">
-              <span className="text-3xl font-extrabold">$29</span>
-              <span className="text-sm text-primary-foreground/70 mb-1">/ month</span>
+        {/* Plan cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {PLANS.map((plan) => (
+            <div
+              key={plan.key}
+              className={`rounded-2xl border p-5 flex flex-col gap-4 relative ${
+                plan.popular
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-border/60 bg-card"
+              }`}
+            >
+              {plan.popular && (
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                  <span className="text-[10px] font-bold bg-primary-foreground text-primary px-2.5 py-0.5 rounded-full uppercase tracking-wide">
+                    Most popular
+                  </span>
+                </div>
+              )}
+              <div>
+                <p className={`text-xs font-bold uppercase tracking-widest mb-1 ${plan.popular ? "text-primary-foreground/60" : "text-muted-foreground"}`}>
+                  {plan.name}
+                </p>
+                <div className="flex items-end gap-1">
+                  <span className="text-3xl font-extrabold">{plan.price}</span>
+                  <span className={`text-sm mb-1 ${plan.popular ? "text-primary-foreground/70" : "text-muted-foreground"}`}>/mo</span>
+                </div>
+                <p className={`text-xs mt-1.5 leading-relaxed ${plan.popular ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
+                  {plan.description}
+                </p>
+              </div>
+              <Button
+                onClick={() => startCheckout(plan.key)}
+                disabled={loading !== null}
+                size="sm"
+                className={`w-full gap-1.5 font-semibold ${
+                  plan.popular
+                    ? "bg-primary-foreground text-primary hover:bg-primary-foreground/90"
+                    : ""
+                }`}
+                variant={plan.popular ? "secondary" : "outline"}
+              >
+                <Zap className="w-3.5 h-3.5" />
+                {loading === plan.key ? "Redirecting…" : `Get ${plan.name}`}
+              </Button>
             </div>
-            <p className="text-xs text-primary-foreground/60 mt-0.5">Cancel anytime · No hidden fees</p>
-          </div>
+          ))}
+        </div>
 
-          <ul className="space-y-2">
-            {PRO_FEATURES.map((f) => (
-              <li key={f} className="flex items-center gap-2 text-sm text-primary-foreground/90">
-                <CheckCircle2 className="w-3.5 h-3.5 text-primary-foreground/60 shrink-0" />
+        {/* What you get */}
+        <div className="rounded-xl border border-border/60 bg-muted/30 p-5">
+          <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3">All plans include</p>
+          <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {WHAT_YOU_GET.map((f) => (
+              <li key={f} className="flex items-center gap-2 text-sm">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
                 {f}
               </li>
             ))}
           </ul>
-
-          <Button
-            onClick={startCheckout}
-            disabled={loading}
-            className="w-full bg-primary-foreground text-primary hover:bg-primary-foreground/90 gap-2 font-semibold"
-            size="lg"
-          >
-            <Zap className="w-4 h-4" />
-            {loading ? "Redirecting to Stripe…" : "Upgrade to Pro"}
-          </Button>
         </div>
 
         {/* Reassurance */}
         <div className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
           <ExternalLink className="w-3 h-3" />
-          Secure payment via Stripe · Your data is kept safe
+          Secure payment via Stripe · Cancel anytime · No lock-in
         </div>
       </div>
     </div>

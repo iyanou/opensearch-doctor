@@ -1,56 +1,56 @@
 export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
-import { timingSafeEqual, createHash } from "crypto";
 import { prisma } from "@/lib/prisma";
-import { LIMITS } from "@/lib/plan";
+import { getLimits } from "@/lib/plan";
+import { validateCronSecret } from "@/lib/cron-auth";
 
-// Called by Railway cron or external scheduler — daily
-// Protect with a shared secret to prevent public triggering
+// Called by Railway cron — daily at 3 AM UTC
 export async function GET(req: NextRequest) {
-  return POST(req);
+  return run(req);
 }
 
 export async function POST(req: NextRequest) {
-  const authHeader = req.headers.get("authorization") ?? "";
-  const expected = `Bearer ${process.env.CRON_SECRET ?? ""}`;
-  const valid =
-    authHeader.length === expected.length &&
-    timingSafeEqual(
-      createHash("sha256").update(authHeader).digest(),
-      createHash("sha256").update(expected).digest()
-    );
-  if (!valid) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  return run(req);
+}
+
+async function run(req: NextRequest) {
+  // F13 — centralized cron auth
+  const authError = validateCronSecret(req);
+  if (authError) return authError;
 
   const users = await prisma.user.findMany({
     select: { id: true, plan: true },
   });
 
-  let totalDeleted = 0;
+  let totalSessionsDeleted = 0;
 
   for (const user of users) {
-    const retentionDays = LIMITS[user.plan].dataRetentionDays;
-    const cutoff = new Date(Date.now() - retentionDays * 86_400_000);
+    const { dataRetentionDays } = getLimits(user.plan);
 
-    // Delete old diagnostic sessions (cascades to findings)
-    const { count } = await prisma.diagnosticSession.deleteMany({
-      where: {
-        cluster: { userId: user.id },
-        startedAt: { lt: cutoff },
-      },
-    });
+    // Skip if retention is 0 or infinite (safety guard — should not happen with new plans)
+    if (!dataRetentionDays || dataRetentionDays <= 0) continue;
 
-    // Delete old metric snapshots
-    await prisma.metricSnapshot.deleteMany({
-      where: {
-        cluster: { userId: user.id },
-        recordedAt: { lt: cutoff },
-      },
-    });
+    const cutoff = new Date(Date.now() - dataRetentionDays * 86_400_000);
 
-    totalDeleted += count;
+    const [{ count }] = await Promise.all([
+      // Delete old diagnostic sessions (cascades to findings)
+      prisma.diagnosticSession.deleteMany({
+        where: {
+          cluster: { userId: user.id },
+          startedAt: { lt: cutoff },
+        },
+      }),
+      // Delete old metric snapshots
+      prisma.metricSnapshot.deleteMany({
+        where: {
+          cluster: { userId: user.id },
+          recordedAt: { lt: cutoff },
+        },
+      }),
+    ]);
+
+    totalSessionsDeleted += count;
   }
 
-  return NextResponse.json({ deleted: totalDeleted, users: users.length });
+  return NextResponse.json({ deleted: totalSessionsDeleted, users: users.length });
 }

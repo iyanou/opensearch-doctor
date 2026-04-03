@@ -1,12 +1,27 @@
 export const dynamic = "force-dynamic";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { stripe, STRIPE_PRO_PRICE_ID, APP_URL } from "@/lib/stripe";
+import { stripe, getPriceId, APP_URL } from "@/lib/stripe";
+import { rateLimit, getRateLimitKey } from "@/lib/rate-limit";
 
-export async function POST() {
+export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const rl = rateLimit(getRateLimitKey(req, `checkout:${session.user.id}`), { windowMs: 60 * 60 * 1000, max: 10 });
+  if (!rl.ok) {
+    return NextResponse.json({ error: "Too many requests. Please try again later." }, { status: 429 });
+  }
+
+  const body = await req.json().catch(() => ({})) as Record<string, string>;
+  const selectedPlan = (body.plan ?? "pro").toLowerCase();       // "starter" | "pro" | "scale"
+  const billing = body.billing === "annual" ? "annual" : "monthly";
+
+  const priceId = getPriceId(selectedPlan, billing);
+  if (!priceId) {
+    return NextResponse.json({ error: "Invalid plan or price not configured" }, { status: 400 });
+  }
 
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
@@ -14,8 +29,8 @@ export async function POST() {
   });
   if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
 
-  // Block if already on an active Pro subscription — prevents duplicate subscriptions
-  if (user.plan === "PRO" && user.subscription?.status === "ACTIVE") {
+  // Block if already on an active subscription to the same plan
+  if (["STARTER", "PRO", "SCALE"].includes(user.plan) && user.subscription?.status === "ACTIVE") {
     return NextResponse.json({ error: "Already subscribed" }, { status: 409 });
   }
 
@@ -34,9 +49,9 @@ export async function POST() {
     customer: customerId,
     mode: "subscription",
     payment_method_types: ["card"],
-    line_items: [{ price: STRIPE_PRO_PRICE_ID, quantity: 1 }],
+    line_items: [{ price: priceId, quantity: 1 }],
     success_url: `${APP_URL}/settings?tab=billing&success=1`,
-    cancel_url: `${APP_URL}/settings?tab=billing`,
+    cancel_url:  `${APP_URL}/settings?tab=billing`,
     subscription_data: { metadata: { userId: user.id } },
     allow_promotion_codes: true,
   });

@@ -1,6 +1,6 @@
 import type { FindingInput, IndicesData } from "../types";
 
-export function analyzeIndices(data: IndicesData): FindingInput[] {
+export function analyzeIndices(data: IndicesData, singleNode = false): FindingInput[] {
   const findings: FindingInput[] = [];
   const { indices } = data;
 
@@ -19,9 +19,9 @@ export function analyzeIndices(data: IndicesData): FindingInput[] {
     });
   }
 
-  // Yellow indices
+  // Yellow indices — suppress on single-node (replicas can't be assigned, it's expected)
   const yellowIndices = indices.filter((i) => i.health === "yellow");
-  if (yellowIndices.length > 5) {
+  if (yellowIndices.length > 5 && !singleNode) {
     findings.push({
       category: "INDICES",
       severity: "WARNING",
@@ -82,15 +82,28 @@ export function analyzeIndices(data: IndicesData): FindingInput[] {
     (i) => i.replicas === 0 && i.docsCount > 0 && !i.name.startsWith(".")
   );
   if (noReplicaIndices.length > 0 && noReplicaIndices.length > indices.length * 0.5) {
-    findings.push({
-      category: "INDICES",
-      severity: "WARNING",
-      title: "Most data indices have no replicas",
-      detail: `${noReplicaIndices.length} indices with data have 0 replicas, offering no redundancy.`,
-      recommendation:
-        "For production clusters, set at least 1 replica per index: PUT /<index>/_settings {\"index.number_of_replicas\": 1}.",
-      metadata: { count: noReplicaIndices.length },
-    });
+    if (singleNode) {
+      // On single-node, no replicas is actually correct — downgrade to INFO
+      findings.push({
+        category: "INDICES",
+        severity: "INFO",
+        title: "Data indices have no replicas (fine for single-node)",
+        detail: `${noReplicaIndices.length} indices with data have 0 replicas. On a single-node cluster, replicas cannot be assigned anyway, so this has no impact.`,
+        recommendation:
+          "When you add more nodes, set replicas to 1 or more for redundancy: PUT /<index>/_settings {\"index.number_of_replicas\": 1}.",
+        metadata: { count: noReplicaIndices.length },
+      });
+    } else {
+      findings.push({
+        category: "INDICES",
+        severity: "WARNING",
+        title: "Most data indices have no replicas",
+        detail: `${noReplicaIndices.length} indices with data have 0 replicas, offering no redundancy.`,
+        recommendation:
+          "For production clusters, set at least 1 replica per index: PUT /<index>/_settings {\"index.number_of_replicas\": 1}.",
+        metadata: { count: noReplicaIndices.length },
+      });
+    }
   }
 
   if (findings.length === 0 && indices.filter((i) => i.health === "green").length === indices.length) {

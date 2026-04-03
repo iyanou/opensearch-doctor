@@ -62,7 +62,7 @@ function ChannelRow({ channel, onDelete, onToggle }: {
     setTimeout(() => setTestResult(null), 5000);
   }
 
-  const destination = channel.config.email ?? channel.config.webhookUrl ?? "—";
+  const destination = channel.config.email ?? channel.config.url ?? channel.config.webhookUrl ?? "—";
 
   return (
     <div className="flex items-center gap-3 px-4 py-3.5 hover:bg-muted/20 transition-colors">
@@ -150,8 +150,9 @@ export function NotificationChannelsPanel({ initialChannels }: { initialChannels
 
     setSaving(true);
     const config: Record<string, string> = {};
-    if (form.type === "EMAIL") config.email = form.email.trim();
-    else config.webhookUrl = form.webhookUrl.trim();
+    if (form.type === "EMAIL")        config.email      = form.email.trim();
+    else if (form.type === "SLACK")   config.webhookUrl = form.webhookUrl.trim();
+    else /* WEBHOOK */                config.url        = form.webhookUrl.trim();
 
     const res = await fetch("/api/notification-channels", {
       method: "POST",

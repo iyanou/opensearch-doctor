@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { Activity, ArrowLeft, Mail, MessageCircle, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ContactForm } from "./contact-form";
 
 export const metadata = {
   title: "Contact — OpenSearch Doctor",
-  description: "Get in touch with the OpenSearch Doctor team.",
+  description: "Get in touch with the OpenSearch Doctor team. We respond within one business day.",
 };
 
 export default function ContactPage() {
@@ -38,7 +39,7 @@ export default function ContactPage() {
           </p>
         </div>
 
-        {/* Contact cards */}
+        {/* Contact channel cards */}
         <div className="grid sm:grid-cols-3 gap-5 mb-14">
           <ContactCard
             icon={Mail}
@@ -66,19 +67,29 @@ export default function ContactPage() {
           />
         </div>
 
-        {/* FAQ pointers */}
+        {/* Contact form */}
+        <div className="rounded-2xl border border-border/60 bg-card p-8 mb-10">
+          <h2 className="font-bold text-lg mb-1">Send us a message</h2>
+          <p className="text-sm text-muted-foreground mb-6">
+            Prefer a form? Fill this in and we&apos;ll reply to your email.
+          </p>
+          <ContactForm />
+        </div>
+
+        {/* Quick FAQ */}
         <div className="rounded-2xl border border-border/60 bg-card p-8 space-y-6">
           <h2 className="font-bold text-lg">Before you write</h2>
           <p className="text-sm text-muted-foreground leading-relaxed">
             Many common questions are already answered on our{" "}
-            <Link href="/pricing#faq" className="text-primary hover:underline">Pricing & FAQ page</Link>.
-            A few quick answers:
+            <Link href="/pricing#faq" className="text-primary hover:underline">Pricing & FAQ page</Link>{" "}
+            and in the{" "}
+            <Link href="/docs" className="text-primary hover:underline">documentation</Link>.
           </p>
           <div className="space-y-4">
             {[
               {
                 q: "I installed the agent but no data is showing.",
-                a: "Check that the agent key is correct and that the platform URL is reachable from your server. Review the agent logs for connection errors.",
+                a: "Check that the agent key is correct and that the server can reach opensearchdoctor.com on port 443. Review the agent logs (agent.log) for connection errors.",
               },
               {
                 q: "How do I cancel my subscription?",
@@ -90,7 +101,7 @@ export default function ContactPage() {
               },
               {
                 q: "I need to delete my account and all my data.",
-                a: "Go to Settings → Account → Delete account. Data is purged within 30 days. Alternatively email support and we will do it manually.",
+                a: "Go to Settings → Account → Delete account. Data is purged within 30 days. Alternatively email support and we will handle it manually.",
               },
             ].map(({ q, a }) => (
               <div key={q} className="border-l-2 border-primary/30 pl-4 space-y-1">
@@ -101,7 +112,6 @@ export default function ContactPage() {
           </div>
         </div>
 
-        {/* Response time notice */}
         <p className="text-center text-xs text-muted-foreground mt-10">
           We aim to respond within one business day (Mon–Fri, UTC+1).
         </p>
@@ -119,13 +129,12 @@ export default function ContactPage() {
           <div className="flex items-center gap-6 text-xs text-muted-foreground">
             <Link href="/#features" className="hover:text-foreground transition-colors">Features</Link>
             <Link href="/pricing" className="hover:text-foreground transition-colors">Pricing</Link>
+            <Link href="/docs" className="hover:text-foreground transition-colors">Docs</Link>
             <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
             <Link href="/terms" className="hover:text-foreground transition-colors">Terms</Link>
             <Link href="/contact" className="text-foreground font-medium">Contact</Link>
           </div>
-          <p className="text-xs text-muted-foreground">
-            © {new Date().getFullYear()} OpenSearch Doctor
-          </p>
+          <p className="text-xs text-muted-foreground">© {new Date().getFullYear()} OpenSearch Doctor</p>
         </div>
       </footer>
     </div>
@@ -133,19 +142,10 @@ export default function ContactPage() {
 }
 
 function ContactCard({
-  icon: Icon,
-  title,
-  description,
-  href,
-  label,
-  color,
+  icon: Icon, title, description, href, label, color,
 }: {
-  icon: React.ElementType;
-  title: string;
-  description: string;
-  href: string;
-  label: string;
-  color: string;
+  icon: React.ElementType; title: string; description: string;
+  href: string; label: string; color: string;
 }) {
   return (
     <a

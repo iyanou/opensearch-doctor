@@ -117,7 +117,7 @@ export default function LoginPage() {
               <span className="underline underline-offset-2 cursor-pointer hover:text-foreground transition-colors">Privacy Policy</span>.
             </p>
             <p className="text-xs text-muted-foreground mt-3">
-              14-day free trial · No credit card required
+              Free forever · 1 cluster · No credit card required
             </p>
           </div>
         </div>

@@ -6,7 +6,6 @@ import { AgentDownloadPanel } from "@/components/settings/agent-download-panel";
 import { BillingPanel } from "@/components/settings/billing-panel";
 import { NotificationChannelsPanel } from "@/components/settings/notification-channels-panel";
 import { ApiKeysPanel } from "@/components/settings/api-keys-panel";
-import { getPlanInfo } from "@/lib/plan";
 import { KeyRound, CreditCard, Bell, Code2, Rocket } from "lucide-react";
 
 const TABS = [
@@ -55,7 +54,6 @@ export default async function SettingsPage({
   ]);
 
   if (!user) return null;
-  const planInfo = getPlanInfo(user);
 
   return (
     <div className="min-h-full">
@@ -91,9 +89,6 @@ export default async function SettingsPage({
           {tab === "billing" && (
             <BillingPanel
               plan={user.plan}
-              trialDaysLeft={planInfo.trialDaysLeft}
-              isTrialActive={planInfo.isTrialActive}
-              isTrialExpired={planInfo.isTrialExpired}
               hasSubscription={!!user.subscription}
               subscriptionStatus={user.subscription?.status ?? null}
               currentPeriodEnd={user.subscription?.currentPeriodEnd ?? null}

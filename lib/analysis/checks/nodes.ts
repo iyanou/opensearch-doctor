@@ -1,6 +1,6 @@
 import type { NodesData, FindingInput } from "../types";
 
-export function analyzeNodes(data: NodesData): { findings: FindingInput[] } {
+export function analyzeNodes(data: NodesData, singleNode = false): { findings: FindingInput[] } {
   const findings: FindingInput[] = [];
 
   for (const node of data.nodes) {
@@ -60,6 +60,22 @@ export function analyzeNodes(data: NodesData): { findings: FindingInput[] } {
       });
     }
 
+    // JVM GC pressure (3a)
+    if (node.gcOldCollectionTimeMs !== undefined && node.uptimeMs > 0) {
+      const gcRatio = node.gcOldCollectionTimeMs / node.uptimeMs;
+      if (gcRatio > 0.10) {
+        findings.push({
+          category: "NODES",
+          severity: "CRITICAL",
+          title: `Node "${node.name}" JVM GC pressure high (${(gcRatio * 100).toFixed(1)}% of uptime in GC)`,
+          detail: `Node ${node.name} old-generation GC has consumed ${(gcRatio * 100).toFixed(1)}% of uptime (${node.gcOldCollectionTimeMs}ms). High GC pressure causes latency spikes, thread stalls, and can lead to OutOfMemoryError even when heap% looks acceptable.`,
+          recommendation: "Increase JVM heap size (max 50% of RAM, hard limit 31GB for compressed oops). Reduce fielddata usage, avoid high-cardinality aggregations, and check for mapping explosions.",
+          docUrl: "https://opensearch.org/docs/latest/install-and-configure/configuring-opensearch/",
+          metadata: { nodeId: node.id, nodeName: node.name, gcRatioPct: gcRatio * 100, gcTimeMs: node.gcOldCollectionTimeMs },
+        });
+      }
+    }
+
     // Recent restart
     if (node.uptimeMs < 60 * 60 * 1000) {
       const uptimeMins = Math.floor(node.uptimeMs / 60000);
@@ -74,17 +90,19 @@ export function analyzeNodes(data: NodesData): { findings: FindingInput[] } {
     }
   }
 
-  // Check for single master node
-  const masterNodes = data.nodes.filter((n) => n.roles.includes("master") || n.roles.includes("cluster_manager"));
-  if (masterNodes.length === 1) {
-    findings.push({
-      category: "NODES",
-      severity: "WARNING",
-      title: "Single master-eligible node (no quorum HA)",
-      detail: "Only one master-eligible node detected. If it fails, the cluster will become unavailable.",
-      recommendation: "Add at least 2 more master-eligible nodes (recommended: 3 total for quorum).",
-      docUrl: "https://opensearch.org/docs/latest/tuning-your-cluster/",
-    });
+  // Single master-eligible node — suppress on single-node clusters (cluster-health already covers the HA finding)
+  if (!singleNode) {
+    const masterNodes = data.nodes.filter((n) => n.roles.includes("master") || n.roles.includes("cluster_manager"));
+    if (masterNodes.length === 1) {
+      findings.push({
+        category: "NODES",
+        severity: "WARNING",
+        title: "Single master-eligible node (no quorum HA)",
+        detail: "Only one master-eligible node detected. If it fails, the cluster will become unavailable.",
+        recommendation: "Add at least 2 more master-eligible nodes (recommended: 3 total for quorum).",
+        docUrl: "https://opensearch.org/docs/latest/tuning-your-cluster/",
+      });
+    }
   }
 
   return { findings };

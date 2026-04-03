@@ -26,6 +26,7 @@ export interface AnalysisResult {
 
 // Raw data shape sent by the agent
 export interface AgentPayload {
+  singleNode?: boolean;
   clusterHealth?: ClusterHealthData;
   nodes?: NodesData;
   shards?: ShardsData;
@@ -37,6 +38,7 @@ export interface AgentPayload {
   plugins?: PluginsData;
   ingestPipelines?: IngestPipelinesData;
   templates?: TemplatesData;
+  circuitBreakers?: CircuitBreakersData;
 }
 
 export interface ClusterHealthData {
@@ -49,6 +51,7 @@ export interface ClusterHealthData {
   initializingShards: number;
   unassignedShards: number;
   pendingTasks: number;
+  pendingTasksMaxWaitMs?: number;
 }
 
 export interface NodeStat {
@@ -62,6 +65,8 @@ export interface NodeStat {
   diskAvailableBytes: number;
   uptimeMs: number;
   osMemUsedPercent: number;
+  gcOldCollectionTimeMs?: number;
+  gcOldCollectionCount?: number;
 }
 
 export interface NodesData {
@@ -73,6 +78,7 @@ export interface ShardsData {
   unassignedReasons: Record<string, number>; // reason -> count
   shardCountPerNode: Record<string, number>; // nodeId -> count
   avgShardSizeBytes: number;
+  totalShardCount?: number;
 }
 
 export interface IndicesData {
@@ -136,4 +142,10 @@ export interface TemplatesData {
   templatesCount: number;
   overlappingPriorities: number;
   unusedTemplates: number;
+}
+
+export interface CircuitBreakersData {
+  fielddataTripped: number;
+  requestTripped: number;
+  parentTripped: number;
 }

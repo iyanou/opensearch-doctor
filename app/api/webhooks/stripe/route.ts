@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { stripe, STRIPE_WEBHOOK_SECRET } from "@/lib/stripe";
+import { stripe, STRIPE_WEBHOOK_SECRET, priceIdToPlan } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
 import type Stripe from "stripe";
 
@@ -72,9 +72,11 @@ async function upsertSubscription(sub: Stripe.Subscription, customerId: string) 
     ?? (sub as unknown as { current_period_end?: number })?.current_period_end
     ?? Math.floor(Date.now() / 1000) + 30 * 86400;
   const status = stripeStatusToPrisma(sub.status);
-  const plan = status === "ACTIVE" || status === "TRIALING" ? "PRO" : "FREE";
-  // Newer Stripe API versions use `cancel_at` instead of `cancel_at_period_end`
-  // when cancelling via the customer portal. Treat either as a scheduled cancellation.
+  const isActive = status === "ACTIVE" || status === "TRIALING";
+  // Resolve plan from price ID — fall back to PRO for unrecognised prices (backward compat)
+  const paidPlan = priceIdToPlan(priceId) ?? "PRO";
+  // When subscription is cancelled/inactive, revert to FREE_TRIAL so user can still upgrade
+  const plan = isActive ? paidPlan : "FREE_TRIAL";
   const cancelAtPeriodEnd = sub.cancel_at_period_end || (sub.cancel_at !== null && sub.cancel_at !== undefined);
 
   await prisma.$transaction([
@@ -85,7 +87,7 @@ async function upsertSubscription(sub: Stripe.Subscription, customerId: string) 
         stripeSubscriptionId: sub.id,
         stripePriceId: priceId,
         status,
-        plan: "PRO",
+        plan: paidPlan,
         currentPeriodStart: new Date(periodStart * 1000),
         currentPeriodEnd: new Date(periodEnd * 1000),
         cancelAtPeriodEnd,
@@ -94,7 +96,7 @@ async function upsertSubscription(sub: Stripe.Subscription, customerId: string) 
         stripeSubscriptionId: sub.id,
         stripePriceId: priceId,
         status,
-        plan: status === "ACTIVE" || status === "TRIALING" ? "PRO" : "FREE",
+        plan: isActive ? paidPlan : "FREE_TRIAL",
         currentPeriodStart: new Date(periodStart * 1000),
         currentPeriodEnd: new Date(periodEnd * 1000),
         cancelAtPeriodEnd,

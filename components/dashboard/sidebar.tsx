@@ -12,7 +12,6 @@ import {
   Bell,
   ChevronUp,
   Zap,
-  Clock,
   X,
 } from "lucide-react";
 import Image from "next/image";
@@ -33,7 +32,7 @@ const NAV = [
 
 interface SidebarProps {
   user: { name?: string | null; email?: string | null; image?: string | null };
-  plan?: "FREE_TRIAL" | "FREE" | "PRO" | null;
+  plan?: "FREE_TRIAL" | "STARTER" | "PRO" | "SCALE" | null;
   trialDaysLeft?: number;
   firingAlertsCount?: number;
   // Mobile
@@ -132,13 +131,21 @@ export function Sidebar({ user, plan, trialDaysLeft, firingAlertsCount = 0, isOp
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium truncate leading-tight">{user.name ?? "User"}</p>
                 <div className="flex items-center gap-1.5 mt-0.5">
-                  {plan === "PRO" ? (
+                  {plan === "SCALE" ? (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded bg-purple-100 text-purple-700 dark:bg-purple-500/15 dark:text-purple-400 uppercase tracking-wide leading-none">
+                      <Zap className="w-2.5 h-2.5" /> Scale
+                    </span>
+                  ) : plan === "PRO" ? (
                     <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400 uppercase tracking-wide leading-none">
                       <Zap className="w-2.5 h-2.5" /> Pro
                     </span>
-                  ) : plan === "FREE_TRIAL" ? (
+                  ) : plan === "STARTER" ? (
                     <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-400 uppercase tracking-wide leading-none">
-                      <Clock className="w-2.5 h-2.5" /> Trial{trialDaysLeft ? ` · ${trialDaysLeft}d` : ""}
+                      <Zap className="w-2.5 h-2.5" /> Starter
+                    </span>
+                  ) : plan === "FREE_TRIAL" ? (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400 uppercase tracking-wide leading-none">
+                      Trial{typeof trialDaysLeft === "number" && trialDaysLeft > 0 ? ` · ${trialDaysLeft}d` : ""}
                     </span>
                   ) : (
                     <span className="inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded bg-muted text-muted-foreground uppercase tracking-wide leading-none border border-border/60">

@@ -8,9 +8,9 @@ export function analyzePerformance(data: PerformanceData): FindingInput[] {
     findings.push({
       category: "PERFORMANCE",
       severity: data.bulkRejections > 100 ? "CRITICAL" : "WARNING",
-      title: `Bulk thread pool rejections: ${data.bulkRejections}`,
+      title: `Write thread pool: ${data.bulkRejections} total rejection${data.bulkRejections > 1 ? "s" : ""} since node start`,
       detail:
-        "Bulk indexing requests are being rejected because the indexing thread pool queue is full. This indicates the cluster cannot keep up with ingest throughput.",
+        `Bulk indexing requests have been rejected ${data.bulkRejections} time${data.bulkRejections > 1 ? "s" : ""} since node start because the write thread pool queue was full. This is a cumulative counter — cross-reference across sessions to identify when rejections spiked. Indicates the cluster cannot keep up with ingest throughput at peak times.`,
       recommendation:
         "Reduce bulk request frequency or size. Increase thread_pool.write.queue_size if hardware permits. Review cluster capacity and add nodes if rejections persist.",
       docUrl: "https://opensearch.org/docs/latest/tuning-your-cluster/",
@@ -23,9 +23,9 @@ export function analyzePerformance(data: PerformanceData): FindingInput[] {
     findings.push({
       category: "PERFORMANCE",
       severity: data.queryRejections > 50 ? "CRITICAL" : "WARNING",
-      title: `Search thread pool rejections: ${data.queryRejections}`,
+      title: `Search thread pool: ${data.queryRejections} total rejection${data.queryRejections > 1 ? "s" : ""} since node start`,
       detail:
-        "Search requests are being rejected. This means the cluster is overloaded with search traffic.",
+        `Search requests have been rejected ${data.queryRejections} time${data.queryRejections > 1 ? "s" : ""} since node start because the search thread pool queue was full. This is a cumulative counter since node start — check trends across sessions to identify when load peaked.`,
       recommendation:
         "Reduce search concurrency or add more nodes. Review slow queries and optimize. Consider query caching.",
       metadata: { queryRejections: data.queryRejections },

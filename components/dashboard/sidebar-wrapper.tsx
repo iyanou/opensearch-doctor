@@ -7,7 +7,7 @@ import Image from "next/image";
 
 interface SidebarClientProps {
   user: { name?: string | null; email?: string | null; image?: string | null };
-  plan?: "FREE_TRIAL" | "FREE" | "PRO" | null;
+  plan?: "FREE_TRIAL" | "STARTER" | "PRO" | "SCALE" | null;
   trialDaysLeft?: number;
   firingAlertsCount?: number;
 }

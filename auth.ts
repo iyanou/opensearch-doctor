@@ -55,13 +55,17 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.id = user.id;
+        token.id    = user.id;
+        token.image = user.image;   // Google profile picture URL
+        token.name  = user.name;
       }
       return token;
     },
     async session({ session, token }) {
       if (token?.id) {
-        session.user.id = token.id as string;
+        session.user.id    = token.id as string;
+        session.user.image = token.image as string | null | undefined;
+        session.user.name  = token.name as string | null | undefined;
       }
       return session;
     },

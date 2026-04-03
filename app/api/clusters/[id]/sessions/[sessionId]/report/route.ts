@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { renderToBuffer } from "@react-pdf/renderer";
 import { ReportDocument } from "@/lib/pdf/report";
+import { getLimits } from "@/lib/plan";
 import React from "react";
 
 type NodeStat = {
@@ -19,6 +20,11 @@ export async function GET(
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const userId = session.user.id;
   const { id, sessionId } = await params;
+
+  const userPlan = await prisma.user.findUnique({ where: { id: userId }, select: { plan: true } });
+  if (!userPlan || !getLimits(userPlan.plan).pdf) {
+    return NextResponse.json({ error: "PDF reports require a Starter plan or higher." }, { status: 403 });
+  }
 
   const cluster = await prisma.cluster.findFirst({
     where: { id, userId },

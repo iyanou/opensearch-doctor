@@ -1,8 +1,8 @@
 export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
-import { timingSafeEqual, createHash } from "crypto";
 import { prisma } from "@/lib/prisma";
 import { notify } from "@/lib/alerts/notify";
+import { validateCronSecret } from "@/lib/cron-auth";
 
 // Called every 10 minutes by scheduler — checks for agents that went offline
 const OFFLINE_THRESHOLD_MS = 30 * 60 * 1000; // 30 minutes
@@ -12,17 +12,9 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const authHeader = req.headers.get("authorization") ?? "";
-  const expected = `Bearer ${process.env.CRON_SECRET ?? ""}`;
-  const valid =
-    authHeader.length === expected.length &&
-    timingSafeEqual(
-      createHash("sha256").update(authHeader).digest(),
-      createHash("sha256").update(expected).digest()
-    );
-  if (!valid) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  // F13 — centralized cron auth
+  const authError = validateCronSecret(req);
+  if (authError) return authError;
 
   const now = new Date();
   const offlineThreshold = new Date(now.getTime() - OFFLINE_THRESHOLD_MS);
