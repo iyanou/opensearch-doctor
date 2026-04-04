@@ -7,7 +7,7 @@ export const metadata = {
   description: "Terms and conditions for using OpenSearch Doctor.",
 };
 
-const LAST_UPDATED = "June 2025";
+const LAST_UPDATED = "April 2026";
 
 export default function TermsPage() {
   return (
@@ -67,29 +67,61 @@ export default function TermsPage() {
           </Section>
 
           <Section title="3. Plans and Billing">
-            <Subsection title="Free Trial">
-              New accounts receive a 14-day free trial with full Pro features. No credit
-              card is required. At the end of the trial your account transitions to a
-              paused state — no charges are made.
+            <Subsection title="Free Plan">
+              The Free plan is available at no cost with no time limit. It includes 1
+              cluster and 7-day data retention. No credit card is required.
             </Subsection>
-            <Subsection title="Pro Plan">
-              The Pro plan is billed monthly at the published price. All fees are charged
-              in advance. Payment is processed by Stripe. Prices may change with 30 days&apos;
-              prior notice.
+            <Subsection title="Paid Plans (Starter, Pro, Scale)">
+              Paid plans are billed monthly or annually at the published price. All fees
+              are charged in advance. Payment is processed securely by Paddle. Prices may
+              change with 30 days&apos; prior notice.
             </Subsection>
             <Subsection title="Cancellation">
-              You may cancel your subscription at any time from the billing settings.
-              Cancellation takes effect at the end of the current billing period. We do
-              not provide pro-rated refunds for partial months unless required by law.
-            </Subsection>
-            <Subsection title="Refunds">
-              If you experience a significant Service outage attributable to our
-              infrastructure, contact us within 30 days of the incident for a refund
-              consideration. We reserve the right to grant refunds at our discretion.
+              You may cancel your subscription at any time from the billing settings page.
+              Cancellation takes effect at the end of the current billing period. You
+              retain access to paid features until the period ends.
             </Subsection>
           </Section>
 
-          <Section title="4. Acceptable Use">
+          <Section title="4. Refund Policy">
+            <div id="refund" className="space-y-3">
+              <p className="text-muted-foreground leading-relaxed">
+                We want you to be satisfied with OpenSearch Doctor. Our refund policy is as follows:
+              </p>
+              <ul className="space-y-2 text-muted-foreground list-disc pl-5">
+                <li>
+                  <strong className="text-foreground">30-day money-back guarantee:</strong> If you are
+                  not satisfied with your paid subscription, contact us within 30 days of
+                  your first payment and we will issue a full refund — no questions asked.
+                </li>
+                <li>
+                  <strong className="text-foreground">Service outages:</strong> If you experience a
+                  significant outage attributable to our infrastructure, contact us within
+                  30 days of the incident for a pro-rated refund consideration.
+                </li>
+                <li>
+                  <strong className="text-foreground">Renewal charges:</strong> If you forget to
+                  cancel before a renewal and contact us within 7 days of the charge, we
+                  will refund the renewal in full.
+                </li>
+                <li>
+                  <strong className="text-foreground">No partial-month refunds:</strong> Outside of
+                  the above cases, we do not provide pro-rated refunds for partial billing
+                  periods.
+                </li>
+              </ul>
+              <p className="text-muted-foreground leading-relaxed">
+                To request a refund, contact us at{" "}
+                <a href="mailto:support@opensearchdoctor.com" className="text-primary hover:underline">
+                  support@opensearchdoctor.com
+                </a>{" "}
+                with your account email and reason. We process all refund requests within
+                5 business days.
+              </p>
+            </div>
+          </Section>
+
+          <Section title="5. Acceptable Use">
             <p className="text-muted-foreground leading-relaxed">You agree not to:</p>
             <ul className="space-y-2 text-muted-foreground list-disc pl-5 mt-2">
               <li>Use the Service to monitor clusters you do not own or have explicit permission to monitor</li>
@@ -100,7 +132,7 @@ export default function TermsPage() {
             </ul>
           </Section>
 
-          <Section title="5. Intellectual Property">
+          <Section title="6. Intellectual Property">
             <p className="text-muted-foreground leading-relaxed">
               The Service, including all software, design, trademarks, and content, is
               owned by us and protected by intellectual property laws. You are granted a
@@ -113,7 +145,7 @@ export default function TermsPage() {
             </p>
           </Section>
 
-          <Section title="6. Data and Security">
+          <Section title="7. Data and Security">
             <p className="text-muted-foreground leading-relaxed">
               We implement reasonable security measures as described in our Privacy
               Policy. You are responsible for the security of your own infrastructure,
@@ -122,7 +154,7 @@ export default function TermsPage() {
             </p>
           </Section>
 
-          <Section title="7. Availability and SLA">
+          <Section title="8. Availability and SLA">
             <p className="text-muted-foreground leading-relaxed">
               We aim to keep the Service available but do not guarantee uninterrupted
               access. We may perform scheduled maintenance with advance notice. We are
@@ -131,7 +163,7 @@ export default function TermsPage() {
             </p>
           </Section>
 
-          <Section title="8. Disclaimer of Warranties">
+          <Section title="9. Disclaimer of Warranties">
             <p className="text-muted-foreground leading-relaxed">
               THE SERVICE IS PROVIDED &quot;AS IS&quot; WITHOUT WARRANTIES OF ANY KIND, EXPRESS
               OR IMPLIED, INCLUDING BUT NOT LIMITED TO WARRANTIES OF MERCHANTABILITY,
@@ -141,7 +173,7 @@ export default function TermsPage() {
             </p>
           </Section>
 
-          <Section title="9. Limitation of Liability">
+          <Section title="10. Limitation of Liability">
             <p className="text-muted-foreground leading-relaxed">
               TO THE MAXIMUM EXTENT PERMITTED BY LAW, OUR AGGREGATE LIABILITY FOR ANY
               CLAIMS ARISING FROM OR RELATED TO THE SERVICE SHALL NOT EXCEED THE AMOUNT
@@ -151,7 +183,7 @@ export default function TermsPage() {
             </p>
           </Section>
 
-          <Section title="10. Termination">
+          <Section title="11. Termination">
             <p className="text-muted-foreground leading-relaxed">
               You may delete your account at any time from the settings page. We may
               suspend or terminate your account for material breach of these Terms, with
@@ -160,7 +192,7 @@ export default function TermsPage() {
             </p>
           </Section>
 
-          <Section title="11. Changes to These Terms">
+          <Section title="12. Changes to These Terms">
             <p className="text-muted-foreground leading-relaxed">
               We may update these Terms from time to time. We will notify you of material
               changes by email at least 14 days before they take effect. Continued use of
@@ -168,7 +200,7 @@ export default function TermsPage() {
             </p>
           </Section>
 
-          <Section title="12. Governing Law">
+          <Section title="13. Governing Law">
             <p className="text-muted-foreground leading-relaxed">
               These Terms are governed by applicable law. Any disputes shall be resolved
               by the competent courts in the jurisdiction where we are established, unless
@@ -176,7 +208,7 @@ export default function TermsPage() {
             </p>
           </Section>
 
-          <Section title="13. Contact">
+          <Section title="14. Contact">
             <p className="text-muted-foreground leading-relaxed">
               Questions about these Terms:{" "}
               <a href="mailto:support@opensearchdoctor.com" className="text-primary hover:underline">
