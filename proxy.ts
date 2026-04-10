@@ -9,6 +9,8 @@ const PUBLIC_PREFIXES = [
   "/privacy",
   "/terms",
   "/contact",
+  "/blog",
+  "/docs",
   "/api/auth",
   "/api/agent",
   "/api/webhooks",
