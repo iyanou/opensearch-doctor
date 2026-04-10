@@ -23,7 +23,7 @@ export async function GET() {
 
   const now = new Date();
   return NextResponse.json(
-    clusters.map((c) => ({
+    clusters.map((c: typeof clusters[number]) => ({
       id: c.id,
       name: c.name,
       endpoint: c.endpoint,
