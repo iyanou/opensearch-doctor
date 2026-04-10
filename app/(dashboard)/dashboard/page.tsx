@@ -128,8 +128,8 @@ export default async function DashboardPage({
                   cluster.lastSeenAt
                     ? now.getTime() - new Date(cluster.lastSeenAt).getTime() < 10 * 60 * 1000
                     : false;
-                const critCount = latestSession?.findings.filter((f) => f.severity === "CRITICAL").length ?? 0;
-                const warnCount = latestSession?.findings.filter((f) => f.severity === "WARNING").length ?? 0;
+                const critCount = latestSession?.findings.filter((f: { severity: string }) => f.severity === "CRITICAL").length ?? 0;
+                const warnCount = latestSession?.findings.filter((f: { severity: string }) => f.severity === "WARNING").length ?? 0;
                 const scoreDiff = (latestSession?.healthScore != null && prevSession?.healthScore != null)
                   ? latestSession.healthScore - prevSession.healthScore
                   : null;
