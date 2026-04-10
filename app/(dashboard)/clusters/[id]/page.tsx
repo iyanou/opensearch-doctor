@@ -201,7 +201,7 @@ export default async function ClusterDetailPage({ params }: { params: Promise<{ 
         {indices.length > 0 && <IndicesTable indices={indices} />}
 
         {/* ── Remediation log + Session history ────────────────── */}
-        <RemediationLog initialCommands={recentRemediations.map(r => ({
+        <RemediationLog initialCommands={recentRemediations.map((r: typeof recentRemediations[number]) => ({
           ...r,
           createdAt: r.createdAt.toISOString(),
           completedAt: r.completedAt?.toISOString() ?? null,
