@@ -44,22 +44,24 @@ export default async function DashboardPage({
 
   const now = new Date();
 
-  const totalCritical = clusters.reduce((n: number, c: typeof clusters[number]) => {
+  type ClusterItem = typeof clusters[number];
+
+  const totalCritical = clusters.reduce((n: number, c: ClusterItem) => {
     const s = c.sessions[0];
     return n + (s?.findings.filter((f: { severity: string }) => f.severity === "CRITICAL").length ?? 0);
   }, 0);
 
   const agentsOnline = clusters.filter(
-    (c) => c.lastSeenAt && now.getTime() - new Date(c.lastSeenAt).getTime() < 10 * 60 * 1000
+    (c: ClusterItem) => c.lastSeenAt && now.getTime() - new Date(c.lastSeenAt).getTime() < 10 * 60 * 1000
   ).length;
 
-  const clustersWithScore = clusters.filter((c) => c.sessions[0]?.healthScore != null);
+  const clustersWithScore = clusters.filter((c: ClusterItem) => c.sessions[0]?.healthScore != null);
   const avgHealthScore = clustersWithScore.length > 0
-    ? Math.round(clustersWithScore.reduce((sum: number, c: typeof clusters[number]) => sum + (c.sessions[0]!.healthScore ?? 0), 0) / clustersWithScore.length)
+    ? Math.round(clustersWithScore.reduce((sum: number, c: ClusterItem) => sum + (c.sessions[0]!.healthScore ?? 0), 0) / clustersWithScore.length)
     : null;
 
   const hasAnyClusters = clusters.length > 0;
-  const hasAnySession = clusters.some((c) => c.sessions.length > 0);
+  const hasAnySession = clusters.some((c: ClusterItem) => c.sessions.length > 0);
   const showOnboarding = !hasAnyClusters || !hasAnySession;
 
   return (
