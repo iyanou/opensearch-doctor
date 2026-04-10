@@ -73,8 +73,10 @@ export function Sidebar({ user, plan, trialDaysLeft, firingAlertsCount = 0, isOp
       )}>
         {/* Logo */}
         <div className="flex items-center gap-2.5 px-5 h-14 border-b border-border/60 shrink-0">
-          <Image src="/favicon.svg" alt="OpenSearch Doctor" width={28} height={28} className="shrink-0" />
-          <span className="font-bold text-sm tracking-tight flex-1">OpenSearch Doctor</span>
+          <Link href="/" className="flex items-center gap-2.5 flex-1 hover:opacity-80 transition-opacity">
+            <Image src="/favicon.svg" alt="OpenSearch Doctor" width={28} height={28} className="shrink-0" />
+            <span className="font-bold text-sm tracking-tight">OpenSearch Doctor</span>
+          </Link>
           <div className="flex items-center gap-1">
             <ThemeToggle />
             {/* Close button — mobile only */}

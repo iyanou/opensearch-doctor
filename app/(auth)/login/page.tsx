@@ -41,12 +41,12 @@ export default function LoginPage() {
     <div className="min-h-screen flex">
       {/* Left panel — branding */}
       <div className="hidden lg:flex flex-col justify-between w-[45%] bg-primary px-12 py-12 text-primary-foreground">
-        <div className="flex items-center gap-2.5">
+        <a href="/" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
           <div className="w-8 h-8 rounded-lg bg-primary-foreground/15 flex items-center justify-center">
             <Activity className="w-4 h-4 text-primary-foreground" />
           </div>
           <span className="font-bold text-base">OpenSearch Doctor</span>
-        </div>
+        </a>
         <div>
           <blockquote className="text-2xl font-semibold leading-snug mb-6 text-primary-foreground/95">
             "Know exactly what&apos;s wrong with your cluster — and how to fix it — in under 5 minutes."
@@ -69,12 +69,12 @@ export default function LoginPage() {
       <div className="flex-1 flex items-center justify-center px-6 py-12 bg-background">
         <div className="w-full max-w-sm">
           {/* Mobile logo */}
-          <div className="flex items-center gap-2 mb-10 lg:hidden">
+          <a href="/" className="flex items-center gap-2 mb-10 lg:hidden hover:opacity-80 transition-opacity">
             <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
               <Activity className="w-4 h-4 text-primary-foreground" />
             </div>
             <span className="font-bold">OpenSearch Doctor</span>
-          </div>
+          </a>
 
           {/* Heading */}
           <div className="mb-8">
