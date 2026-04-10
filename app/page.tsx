@@ -86,12 +86,12 @@ export default function LandingPage() {
       <header className="sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-md">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           {/* Logo */}
-          <div className="flex items-center gap-2.5 shrink-0">
+          <a href="/" className="flex items-center gap-2.5 shrink-0 hover:opacity-80 transition-opacity">
             <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center shadow-sm">
               <Activity className="w-4 h-4 text-primary-foreground" />
             </div>
             <span className="font-bold text-base tracking-tight">OpenSearch Doctor</span>
-          </div>
+          </a>
 
           {/* Nav links — hidden on mobile */}
           <nav className="hidden md:flex items-center gap-6 text-sm text-muted-foreground">
@@ -497,12 +497,12 @@ export default function LandingPage() {
       {/* ── Footer ───────────────────────────────────────────────────── */}
       <footer className="border-t border-border/60 py-10">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2.5">
+          <a href="/" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
             <div className="w-6 h-6 rounded bg-primary flex items-center justify-center">
               <Activity className="w-3.5 h-3.5 text-primary-foreground" />
             </div>
             <span className="text-sm font-semibold">OpenSearch Doctor</span>
-          </div>
+          </a>
 
           <div className="grid grid-cols-3 sm:flex sm:items-center sm:gap-6 gap-x-6 gap-y-2 text-xs text-muted-foreground text-center">
             <a href="#features"  className="hover:text-foreground transition-colors">Features</a>
