@@ -44,9 +44,9 @@ export default async function DashboardPage({
 
   const now = new Date();
 
-  const totalCritical = clusters.reduce((n, c) => {
+  const totalCritical = clusters.reduce((n: number, c) => {
     const s = c.sessions[0];
-    return n + (s?.findings.filter((f) => f.severity === "CRITICAL").length ?? 0);
+    return n + (s?.findings.filter((f: { severity: string }) => f.severity === "CRITICAL").length ?? 0);
   }, 0);
 
   const agentsOnline = clusters.filter(
@@ -55,7 +55,7 @@ export default async function DashboardPage({
 
   const clustersWithScore = clusters.filter((c) => c.sessions[0]?.healthScore != null);
   const avgHealthScore = clustersWithScore.length > 0
-    ? Math.round(clustersWithScore.reduce((sum, c) => sum + (c.sessions[0]!.healthScore ?? 0), 0) / clustersWithScore.length)
+    ? Math.round(clustersWithScore.reduce((sum: number, c) => sum + (c.sessions[0]!.healthScore ?? 0), 0) / clustersWithScore.length)
     : null;
 
   const hasAnyClusters = clusters.length > 0;
