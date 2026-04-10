@@ -4,7 +4,7 @@
  * F5: Notification failures are caught and logged; never abort the diagnostic.
  */
 import { prisma } from "@/lib/prisma";
-import { Prisma } from "@prisma/client";
+import type { PrismaClient } from "@prisma/client";
 import type { AlertRuleKey, AlertRule, AlertEvent } from "@prisma/client";
 import { notifyBatch } from "./notify";
 import type { AlertContext } from "./types";
@@ -15,7 +15,8 @@ const COOLDOWN_MS = 4 * 60 * 60 * 1000; // 4 hours
 
 export async function evaluateAlerts(ctx: AlertContext): Promise<void> {
   // F4 — serializable transaction prevents concurrent diagnostics from racing on alert state
-  await prisma.$transaction(async (tx) => {
+  type TxClient = Omit<PrismaClient, "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends">;
+  await prisma.$transaction(async (tx: TxClient) => {
     const rules = await tx.alertRule.findMany({
       where: { clusterId: ctx.clusterId, enabled: true },
       include: {
@@ -88,7 +89,7 @@ export async function evaluateAlerts(ctx: AlertContext): Promise<void> {
         console.error("[alerts] notification delivery failed:", err);
       }
     }
-  }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+  }, { isolationLevel: "Serializable" });
 }
 
 function evaluateRule(
