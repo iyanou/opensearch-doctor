@@ -121,7 +121,7 @@ export default async function DashboardPage({
 
             {/* Cluster cards */}
             <div className="grid gap-4 grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
-              {clusters.map((cluster) => {
+              {clusters.map((cluster: ClusterItem) => {
                 const latestSession = cluster.sessions[0] ?? null;
                 const prevSession = cluster.sessions[1] ?? null;
                 const agentOnline =
