@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
 
   // Mark all as RUNNING
   await prisma.remediationCommand.updateMany({
-    where: { id: { in: commands.map((c) => c.id) } },
+    where: { id: { in: commands.map((c: { id: string }) => c.id) } },
     data: { status: "RUNNING", startedAt: new Date() },
   });
 
