@@ -1,7 +1,18 @@
 import Stripe from "stripe";
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2026-02-25.clover",
+// Lazy singleton — avoids crash at module load time when key is not yet configured
+let _stripe: Stripe | null = null;
+function getStripeClient(): Stripe {
+  if (!_stripe) {
+    const key = process.env.STRIPE_SECRET_KEY;
+    if (!key) throw new Error("STRIPE_SECRET_KEY is not configured");
+    _stripe = new Stripe(key, { apiVersion: "2026-02-25.clover" });
+  }
+  return _stripe;
+}
+export const stripe: Stripe = new Proxy({} as Stripe, {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  get(_target, prop: string | symbol) { return (getStripeClient() as any)[prop]; },
 });
 
 // ─── Price IDs (set in Railway env vars) ─────────────────────────────────────
