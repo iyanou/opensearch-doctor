@@ -215,7 +215,7 @@ export default async function ClusterDetailPage({ params }: { params: Promise<{ 
         {alertRules.length > 0 && (
           <AlertRulesPanel
             clusterId={cluster.id}
-            initialRules={alertRules.map((r) => ({
+            initialRules={alertRules.map((r: typeof alertRules[number]) => ({
               id: r.id,
               ruleKey: r.ruleKey,
               enabled: r.enabled,

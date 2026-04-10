@@ -98,7 +98,7 @@ export default async function SettingsPage({
           )}
           {tab === "notifications" && (
             <NotificationChannelsPanel
-              initialChannels={channels.map((c) => ({
+              initialChannels={channels.map((c: typeof channels[number]) => ({
                 ...c,
                 config: c.config as Record<string, string>,
               }))}
