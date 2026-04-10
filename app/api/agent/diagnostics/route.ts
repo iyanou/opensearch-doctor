@@ -1,6 +1,5 @@
 export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
-import { Prisma } from "@prisma/client";
 import { validateAgentKey } from "@/lib/agent-auth";
 import { prisma } from "@/lib/prisma";
 import { runAnalysis } from "@/lib/analysis/engine";
@@ -80,7 +79,7 @@ export async function POST(req: NextRequest) {
       agentVersion,
       osVersion,
       durationMs,
-      rawData: data as Prisma.InputJsonObject,
+      rawData: data as Record<string, unknown>,
       status: "RUNNING",
       idempotencyKey: idempotencyKey ?? null,
     },
@@ -114,7 +113,7 @@ export async function POST(req: NextRequest) {
             detail: f.detail,
             recommendation: f.recommendation,
             docUrl: f.docUrl ?? null,
-            metadata: f.metadata != null ? (f.metadata as Prisma.InputJsonObject) : Prisma.JsonNull,
+            metadata: f.metadata != null ? (f.metadata as Record<string, unknown>) : null,
           })),
         });
       }
