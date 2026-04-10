@@ -1,7 +1,6 @@
 export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { validateAgentKey } from "@/lib/agent-auth";
-import type { PrismaClient } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { runAnalysis } from "@/lib/analysis/engine";
 import { evaluateAlerts } from "@/lib/alerts/engine";
@@ -98,7 +97,8 @@ export async function POST(req: NextRequest) {
 
   // F2 — atomic transaction: all writes succeed or all roll back
   try {
-    await prisma.$transaction(async (tx: Omit<PrismaClient, "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends">) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await prisma.$transaction(async (tx: any) => {
       await tx.diagnosticSession.update({
         where: { id: session.id },
         data: { status: "COMPLETED", completedAt: new Date(), healthScore },
