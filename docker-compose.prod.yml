@@ -1,6 +1,7 @@
 version: "3.8"
 
 # Production — PostgreSQL only (OpenSearch runs on the user's own infra)
+# Data stored as bind mount at ./postgres-data — safe from docker volume prune
 services:
   postgres:
     image: postgres:16-alpine
@@ -13,12 +14,9 @@ services:
     ports:
       - "127.0.0.1:5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - ./postgres-data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U osduser -d opensearch_doctor"]
       interval: 10s
       timeout: 5s
       retries: 5
-
-volumes:
-  postgres_data:
