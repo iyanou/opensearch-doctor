@@ -3,9 +3,12 @@
  * F3: deliverWebhookQueued writes to WebhookDelivery table instead of fire-and-forget fetch.
  */
 import { createHmac } from "crypto";
-import type { DiagnosticSession, Finding, Cluster } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { validateWebhookUrl } from "@/lib/safe-fetch";
+
+type ClusterLike = { id: string; name: string; webhookUrl: string | null; webhookSecret: string | null };
+type FindingLike = { severity: string; category: string; title: string; recommendation: string };
+type SessionLike = { id: string; healthScore: number | null; startedAt: Date; completedAt: Date | null; findings: FindingLike[] };
 
 export interface WebhookPayload {
   event: "diagnostic.completed";
@@ -30,8 +33,8 @@ export interface WebhookPayload {
 }
 
 export async function deliverWebhook(
-  cluster: Pick<Cluster, "id" | "name" | "webhookUrl" | "webhookSecret">,
-  session: DiagnosticSession & { findings: Finding[] }
+  cluster: ClusterLike,
+  session: SessionLike
 ): Promise<void> {
   if (!cluster.webhookUrl) return;
   const urlCheck = validateWebhookUrl(cluster.webhookUrl);
@@ -84,8 +87,8 @@ export async function deliverWebhook(
  * The retry cron picks this up and delivers with exponential backoff.
  */
 export async function deliverWebhookQueued(
-  cluster: Pick<Cluster, "id" | "name" | "webhookUrl" | "webhookSecret">,
-  session: DiagnosticSession & { findings: Finding[] }
+  cluster: ClusterLike,
+  session: SessionLike
 ): Promise<void> {
   if (!cluster.webhookUrl) return;
   const urlCheck = validateWebhookUrl(cluster.webhookUrl);
