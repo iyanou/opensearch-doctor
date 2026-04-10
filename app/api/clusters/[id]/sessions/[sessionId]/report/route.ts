@@ -57,7 +57,7 @@ export async function GET(
     osVersion: diagSession.osVersion,
     durationMs: diagSession.durationMs,
     healthScore: diagSession.healthScore,
-    findings: diagSession.findings.map((f) => ({
+    findings: diagSession.findings.map((f: { severity: string; category: string; title: string; detail: string; recommendation: string }) => ({
       severity: f.severity,
       category: f.category,
       title: f.title,
