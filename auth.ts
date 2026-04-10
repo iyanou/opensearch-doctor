@@ -53,30 +53,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     }),
   ],
   callbacks: {
-    authorized({ auth, request: { nextUrl } }) {
-      const isLoggedIn = !!auth?.user;
-      const path = nextUrl.pathname;
-
-      // Public routes — no auth required
-      const isPublic =
-        path === "/" ||
-        path.startsWith("/blog") ||
-        path.startsWith("/docs") ||
-        path.startsWith("/pricing") ||
-        path.startsWith("/contact") ||
-        path.startsWith("/terms") ||
-        path.startsWith("/privacy") ||
-        path.startsWith("/login") ||
-        path.startsWith("/signup") ||
-        path.startsWith("/api/") ||
-        path.startsWith("/_next/") ||
-        path === "/robots.txt" ||
-        path === "/sitemap.xml" ||
-        path === "/icon.svg";
-
-      if (isPublic) return true;
-      return isLoggedIn; // Redirect unauthenticated users to /login
-    },
     async jwt({ token, user }) {
       if (user) {
         token.id    = user.id;
