@@ -87,10 +87,10 @@ export default async function ClusterDetailPage({ params }: { params: Promise<{ 
     shards = (raw?.shards as ShardsInfo) ?? null;
   }
 
-  const critCount = latestSession?.findings.filter((f) => f.severity === "CRITICAL").length ?? 0;
-  const warnCount = latestSession?.findings.filter((f) => f.severity === "WARNING").length ?? 0;
-  const infoCount = latestSession?.findings.filter((f) => f.severity === "INFO").length ?? 0;
-  const okCount = latestSession?.findings.filter((f) => f.severity === "OK").length ?? 0;
+  const critCount = latestSession?.findings.filter((f: { severity: string }) => f.severity === "CRITICAL").length ?? 0;
+  const warnCount = latestSession?.findings.filter((f: { severity: string }) => f.severity === "WARNING").length ?? 0;
+  const infoCount = latestSession?.findings.filter((f: { severity: string }) => f.severity === "INFO").length ?? 0;
+  const okCount = latestSession?.findings.filter((f: { severity: string }) => f.severity === "OK").length ?? 0;
 
   const envStyles: Record<string, string> = {
     PRODUCTION: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
