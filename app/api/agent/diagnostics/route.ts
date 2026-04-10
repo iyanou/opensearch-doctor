@@ -79,7 +79,8 @@ export async function POST(req: NextRequest) {
       agentVersion,
       osVersion,
       durationMs,
-      rawData: data as Record<string, unknown>,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      rawData: data as any,
       status: "RUNNING",
       idempotencyKey: idempotencyKey ?? null,
     },
