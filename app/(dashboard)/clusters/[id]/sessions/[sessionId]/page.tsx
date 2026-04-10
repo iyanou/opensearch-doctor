@@ -44,10 +44,10 @@ export default async function SessionDetailPage({
     nodes = raw?.nodes?.nodes ?? [];
   }
 
-  const critCount = diagSession.findings.filter((f) => f.severity === "CRITICAL").length;
-  const warnCount = diagSession.findings.filter((f) => f.severity === "WARNING").length;
-  const infoCount = diagSession.findings.filter((f) => f.severity === "INFO").length;
-  const okCount   = diagSession.findings.filter((f) => f.severity === "OK").length;
+  const critCount = diagSession.findings.filter((f: { severity: string }) => f.severity === "CRITICAL").length;
+  const warnCount = diagSession.findings.filter((f: { severity: string }) => f.severity === "WARNING").length;
+  const infoCount = diagSession.findings.filter((f: { severity: string }) => f.severity === "INFO").length;
+  const okCount   = diagSession.findings.filter((f: { severity: string }) => f.severity === "OK").length;
 
   const startedAt = new Date(diagSession.startedAt);
 
