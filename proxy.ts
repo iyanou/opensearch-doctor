@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getToken } from "next-auth/jwt";
 
 const PUBLIC_PREFIXES = [
   "/",
@@ -28,27 +27,26 @@ export async function proxy(req: NextRequest) {
 
   if (isPublic) return NextResponse.next();
 
-  // NextAuth v5 encrypts JWTs (JWE) — must pass salt for correct decryption
-  const token = await getToken({
-    req,
-    secret: process.env.NEXTAUTH_SECRET,
-    salt: process.env.NODE_ENV === "production"
+  // Check if session cookie exists — actual session verification happens
+  // server-side in the dashboard layout via auth()
+  const cookieName =
+    process.env.NODE_ENV === "production"
       ? "__Secure-next-auth.session-token"
-      : "next-auth.session-token",
-  });
+      : "next-auth.session-token";
 
-  if (!token) {
+  const hasSession = req.cookies.has(cookieName);
+
+  if (!hasSession) {
     return NextResponse.redirect(new URL("/login", req.url));
   }
 
-  // Prevent browsers and CDNs from caching authenticated page responses.
+  // Prevent caching of authenticated pages
   const res = NextResponse.next();
   res.headers.set("Cache-Control", "no-store, max-age=0");
   return res;
 }
 
 export const config = {
-  // Exclude Next.js internals and all static assets (images, fonts, SVGs, icons)
   matcher: [
     "/((?!_next/static|_next/image|favicon\\.ico|favicon\\.svg|.*\\.(?:png|jpg|jpeg|gif|webp|svg|ico|woff|woff2|ttf|otf)$).*)",
   ],
