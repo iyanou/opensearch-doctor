@@ -28,14 +28,20 @@ export async function proxy(req: NextRequest) {
 
   if (isPublic) return NextResponse.next();
 
-  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+  // NextAuth v5 encrypts JWTs (JWE) — must pass salt for correct decryption
+  const token = await getToken({
+    req,
+    secret: process.env.NEXTAUTH_SECRET,
+    salt: process.env.NODE_ENV === "production"
+      ? "__Secure-next-auth.session-token"
+      : "next-auth.session-token",
+  });
+
   if (!token) {
     return NextResponse.redirect(new URL("/login", req.url));
   }
 
   // Prevent browsers and CDNs from caching authenticated page responses.
-  // This stops sensitive dashboard content from appearing in back/forward cache
-  // or being stored by shared proxies.
   const res = NextResponse.next();
   res.headers.set("Cache-Control", "no-store, max-age=0");
   return res;
