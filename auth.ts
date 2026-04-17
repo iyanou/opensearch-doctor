@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 const isProd = process.env.NODE_ENV === "production";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
+  trustHost: true,
   adapter: PrismaAdapter(prisma),
   session: {
     strategy: "jwt",
