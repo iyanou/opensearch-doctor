@@ -1,7 +1,8 @@
 "use client";
 
-import { signIn } from "next-auth/react";
-import { useState } from "react";
+import { signIn, useSession } from "next-auth/react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Activity, CheckCircle2, AlertCircle } from "lucide-react";
 
 const FEATURES = [
@@ -23,8 +24,15 @@ function GoogleIcon() {
 }
 
 export default function LoginPage() {
+  const { status } = useSession();
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // Already authenticated — go straight to dashboard
+  useEffect(() => {
+    if (status === "authenticated") router.replace("/dashboard");
+  }, [status, router]);
 
   async function handleGoogle() {
     try {
