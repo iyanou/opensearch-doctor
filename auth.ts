@@ -22,6 +22,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         sameSite: "lax" as const, // CSRF protection, allows OAuth redirects
         path: "/",
         secure: isProd,           // HTTPS only in production
+        maxAge: 30 * 24 * 60 * 60, // 30 days — must match session.maxAge
       },
     },
     callbackUrl: {
