@@ -509,9 +509,10 @@ export default function LandingPage() {
             <Link href="/pricing" className="hover:text-foreground transition-colors">Pricing</Link>
             <Link href="/docs"    className="hover:text-foreground transition-colors">Docs</Link>
             <Link href="/blog"    className="hover:text-foreground transition-colors">Blog</Link>
-            <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
-            <Link href="/terms"   className="hover:text-foreground transition-colors">Terms</Link>
-            <Link href="/contact" className="hover:text-foreground transition-colors">Contact</Link>
+            <Link href="/privacy"       className="hover:text-foreground transition-colors">Privacy</Link>
+            <Link href="/terms"         className="hover:text-foreground transition-colors">Terms</Link>
+            <Link href="/terms#refund"  className="hover:text-foreground transition-colors">Refunds</Link>
+            <Link href="/contact"       className="hover:text-foreground transition-colors">Contact</Link>
             <a href="https://status.opensearchdoctor.com" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">Status</a>
             <Link href="/login"   className="hover:text-foreground transition-colors">Sign in</Link>
           </div>
