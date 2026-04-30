@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, XCircle, Zap, ExternalLink, CreditCard, AlertTriangle } from "lucide-react";
+import { CheckCircle2, XCircle, Zap, ExternalLink, CreditCard, AlertTriangle, Trash2 } from "lucide-react";
 import type { Plan } from "@prisma/client";
 
 interface BillingPanelProps {
@@ -85,26 +85,51 @@ export function BillingPanel({
   successMessage,
 }: BillingPanelProps) {
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
-  const [portalLoading, setPortalLoading] = useState(false);
+  const [portalLoading, setPortalLoading]     = useState(false);
+  const [cancelLoading, setCancelLoading]     = useState(false);
+  const [cancelConfirm, setCancelConfirm]     = useState(false);
+  const [checkoutError, setCheckoutError]     = useState<string | null>(null);
 
   async function startCheckout(targetPlan: string) {
     setCheckoutLoading(targetPlan);
-    const res = await fetch("/api/billing/checkout", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ plan: targetPlan, billing: "monthly" }),
-    });
-    const data = await res.json();
-    if (data.url) window.location.href = data.url;
-    else setCheckoutLoading(null);
+    setCheckoutError(null);
+    try {
+      const res  = await fetch("/api/billing/checkout", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ plan: targetPlan, billing: "monthly" }),
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        setCheckoutError(data.error ?? "Failed to start checkout. Please try again.");
+        setCheckoutLoading(null);
+      }
+    } catch {
+      setCheckoutError("Network error. Please try again.");
+      setCheckoutLoading(null);
+    }
   }
 
   async function openPortal() {
     setPortalLoading(true);
-    const res = await fetch("/api/billing/portal", { method: "POST" });
+    const res  = await fetch("/api/billing/portal", { method: "POST" });
     const data = await res.json();
     if (data.url) window.location.href = data.url;
     else setPortalLoading(false);
+  }
+
+  async function cancelSubscription() {
+    setCancelLoading(true);
+    const res = await fetch("/api/billing/portal", { method: "DELETE" });
+    if (res.ok) {
+      window.location.href = "/settings?tab=billing";
+    } else {
+      setCancelLoading(false);
+      setCancelConfirm(false);
+      alert("Failed to cancel subscription. Please try again or contact support.");
+    }
   }
 
   const isPaid = ["STARTER", "PRO", "SCALE"].includes(plan);
@@ -131,6 +156,14 @@ export function BillingPanel({
           <div className="flex items-center gap-2.5 p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-800 dark:text-emerald-300 text-sm font-medium">
             <CheckCircle2 className="w-4 h-4 shrink-0" />
             Your subscription is now active. Welcome!
+          </div>
+        )}
+
+        {/* Checkout error */}
+        {checkoutError && (
+          <div className="flex items-center gap-2.5 p-3.5 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-sm font-medium">
+            <XCircle className="w-4 h-4 shrink-0" />
+            {checkoutError}
           </div>
         )}
 
@@ -221,12 +254,47 @@ export function BillingPanel({
           </div>
         )}
 
-        {/* Manage subscription */}
+        {/* Manage / Cancel subscription */}
         {hasSubscription && (
-          <Button variant="outline" onClick={openPortal} disabled={portalLoading} className="gap-2">
-            <ExternalLink className="w-4 h-4" />
-            {portalLoading ? "Opening…" : "Manage subscription"}
-          </Button>
+          <div className="flex flex-wrap gap-3 items-center">
+            <Button variant="outline" onClick={openPortal} disabled={portalLoading} className="gap-2">
+              <ExternalLink className="w-4 h-4" />
+              {portalLoading ? "Opening…" : "Manage on PayPal"}
+            </Button>
+
+            {!cancelConfirm ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setCancelConfirm(true)}
+                className="gap-1.5 text-destructive hover:text-destructive hover:bg-destructive/10"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                Cancel subscription
+              </Button>
+            ) : (
+              <div className="flex items-center gap-2 p-3 rounded-lg border border-destructive/30 bg-destructive/5">
+                <p className="text-xs text-destructive font-medium">Cancel at end of period?</p>
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  onClick={cancelSubscription}
+                  disabled={cancelLoading}
+                  className="h-7 text-xs px-2.5"
+                >
+                  {cancelLoading ? "Cancelling…" : "Yes, cancel"}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setCancelConfirm(false)}
+                  className="h-7 text-xs px-2.5"
+                >
+                  Keep
+                </Button>
+              </div>
+            )}
+          </div>
         )}
       </div>
     </div>

@@ -55,7 +55,7 @@ const PRICING_TIERS = [
     price: "$39",
     sub: "/ month",
     features: ["Up to 3 clusters", "All 11 check categories", "Email alerts", "30-day retention", "PDF reports"],
-    cta: "Start free trial",
+    cta: "Get started free",
     highlight: false,
   },
   {
@@ -63,7 +63,7 @@ const PRICING_TIERS = [
     price: "$99",
     sub: "/ month",
     features: ["Up to 10 clusters", "All checks & rules", "Email + Slack + webhook alerts", "90-day retention", "PDF reports", "REST API access"],
-    cta: "Start free trial",
+    cta: "Get started free",
     highlight: true,
   },
   {
@@ -71,7 +71,7 @@ const PRICING_TIERS = [
     price: "$199",
     sub: "/ month",
     features: ["Unlimited clusters", "All checks & rules", "All alert channels", "180-day retention", "REST API", "Priority support"],
-    cta: "Start free trial",
+    cta: "Get started free",
     highlight: false,
   },
 ];
@@ -379,7 +379,9 @@ export default function LandingPage() {
           <div className="text-center mb-16">
             <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-3">Pricing</p>
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">Simple, transparent pricing</h2>
-            <p className="text-muted-foreground mt-3">14-day free trial, no credit card. Upgrade when you&apos;re convinced.</p>
+            <p className="text-muted-foreground mt-3">
+              Every account starts with a <strong className="text-foreground">14-day free trial — full Scale-level access</strong>. No credit card required. Pick your plan after.
+            </p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 items-start max-w-4xl mx-auto">

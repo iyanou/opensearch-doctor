@@ -26,7 +26,7 @@ const TIERS = [
       { text: "Slack & webhook alerts",        included: false },
       { text: "REST API access",               included: false },
     ],
-    ctaLabel: "Start free trial",
+    ctaLabel: "Get started free",
   },
   {
     name: "Pro",
@@ -44,7 +44,7 @@ const TIERS = [
       { text: "PDF reports",                   included: true  },
       { text: "REST API access",               included: true  },
     ],
-    ctaLabel: "Start free trial",
+    ctaLabel: "Get started free",
   },
   {
     name: "Scale",
@@ -62,7 +62,7 @@ const TIERS = [
       { text: "PDF reports",                   included: true  },
       { text: "REST API access",               included: true  },
     ],
-    ctaLabel: "Start free trial",
+    ctaLabel: "Get started free",
   },
 ];
 
@@ -159,8 +159,8 @@ export default function PricingPage() {
             Simple, transparent pricing
           </h1>
           <p className="text-lg text-muted-foreground max-w-xl mx-auto text-balance">
-            14-day free trial, no credit card required. Connect your cluster, see real findings.
-            Upgrade when you&apos;re convinced.
+            Every account starts with a 14-day free trial — full Scale-level access, no credit card required.
+            Connect your cluster, see real findings, then pick the plan that fits.
           </p>
         </div>
 
@@ -170,9 +170,9 @@ export default function PricingPage() {
             <Clock className="w-6 h-6 text-primary" />
           </div>
           <div className="flex-1">
-            <p className="font-bold text-sm mb-1">14-day free trial — full Pro access</p>
+            <p className="font-bold text-sm mb-1">14-day free trial — full Scale-level access</p>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Sign up, connect your cluster, and get the full experience. Trial starts when your agent connects. No credit card needed.
+              Every account gets unlimited clusters, all alert channels, and every feature — free for 14 days. Trial starts when your agent first connects.
             </p>
           </div>
           <Link href="/login" className="shrink-0">
@@ -183,6 +183,11 @@ export default function PricingPage() {
         </div>
 
         {/* Tier cards */}
+        <div className="text-center -mt-16">
+          <p className="text-sm text-muted-foreground">
+            All plans include a <span className="font-semibold text-foreground">14-day free trial with full Scale-level access</span>. No credit card required. Pick your plan after the trial.
+          </p>
+        </div>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 items-start">
           {TIERS.map((tier) => (
             <div
