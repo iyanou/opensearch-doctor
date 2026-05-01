@@ -486,8 +486,7 @@ export default function LandingPage() {
             <Link href="/pricing">
               <Button
                 size="lg"
-                variant="outline"
-                className="h-12 px-8 border-white/30 text-white hover:bg-white/10 gap-2 w-full sm:w-auto"
+                className="h-12 px-8 bg-blue-500 hover:bg-blue-600 text-white shadow-lg gap-2 font-semibold w-full sm:w-auto"
               >
                 View pricing <ChevronRight className="w-4 h-4" />
               </Button>
