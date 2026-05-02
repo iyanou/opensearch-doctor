@@ -21,8 +21,8 @@ export async function authenticateApiKey(req: NextRequest): Promise<string | nul
   });
   if (!apiKey) return null;
 
-  // REST API is a Pro-only feature
-  if (apiKey.user.plan !== "PRO") return null;
+  // REST API is available on Trial, Pro and Scale plans (not Starter)
+  if (!["FREE_TRIAL", "PRO", "SCALE"].includes(apiKey.user.plan)) return null;
 
   // Update last used timestamp (fire and forget)
   prisma.apiKey.update({ where: { id: apiKey.id }, data: { lastUsedAt: new Date() } }).catch(() => {});
