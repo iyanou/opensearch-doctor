@@ -239,7 +239,7 @@ export function BillingPanel({
                   </div>
                   <Button
                     size="sm"
-                    variant={targetPlan === "starter" ? "outline" : "default"}
+                    variant="default"
                     onClick={() => startCheckout(targetPlan)}
                     disabled={checkoutLoading !== null}
                     className="gap-1.5 whitespace-nowrap"
