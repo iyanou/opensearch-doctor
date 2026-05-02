@@ -135,7 +135,7 @@ export function ExpiredGate() {
         {/* Reassurance */}
         <div className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
           <ExternalLink className="w-3 h-3" />
-          Secure payment via Stripe · Cancel anytime · No lock-in
+          Secure payment via PayPal · Cancel anytime · No lock-in
         </div>
       </div>
     </div>

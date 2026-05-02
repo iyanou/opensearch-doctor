@@ -56,8 +56,8 @@ export default function PrivacyPage() {
               and personalise your experience.
             </Subsection>
             <Subsection title="Billing information">
-              Payment is processed by Stripe. We never store your card number or bank
-              details. We retain only Stripe customer IDs and subscription status needed
+              Payment is processed by PayPal. We never store your card number or bank
+              details. We retain only PayPal subscription IDs and subscription status needed
               to manage your plan.
             </Subsection>
             <Subsection title="Diagnostic data">
@@ -76,7 +76,7 @@ export default function PrivacyPage() {
           <Section title="2. How We Use Your Information">
             <ul className="space-y-2 text-muted-foreground list-disc pl-5">
               <li>Provide, maintain, and improve the Service</li>
-              <li>Process billing and manage your subscription via Stripe</li>
+              <li>Process billing and manage your subscription via PayPal</li>
               <li>Send transactional emails (alerts, diagnostic reports, account notices) via Resend</li>
               <li>Respond to support requests</li>
               <li>Monitor uptime and diagnose technical problems</li>
@@ -102,7 +102,7 @@ export default function PrivacyPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/40 text-muted-foreground">
-                  <tr><td className="px-4 py-3">Stripe</td><td className="px-4 py-3">Payment processing</td></tr>
+                  <tr><td className="px-4 py-3">PayPal</td><td className="px-4 py-3">Payment processing</td></tr>
                   <tr><td className="px-4 py-3">Resend</td><td className="px-4 py-3">Transactional email delivery</td></tr>
                   <tr><td className="px-4 py-3">Google OAuth</td><td className="px-4 py-3">Authentication (optional)</td></tr>
                 </tbody>
