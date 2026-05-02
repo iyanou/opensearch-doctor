@@ -81,11 +81,12 @@ export async function sendWelcomeEmail(to: string, name: string | null) {
     <p style="margin: 4px 0 12px;">Go to <a href="${APP_URL}/settings?tab=agent-keys" style="color: #2563eb;">Settings → Agent Keys</a> and create a new key. Copy it — you'll need it in Step 3.</p>
 
     <p style="margin: 0; font-weight: 600; color: #374151;">Step 2 — Download the agent</p>
-    <p style="margin: 4px 0 4px;">Run this on your server (Linux/macOS):</p>
-    ${codeBlock(`curl -L https://github.com/eraXXX/opensearch-doctor-agent/releases/latest/download/osd-agent-linux-amd64 -o osd-agent && chmod +x osd-agent`)}
+    <p style="margin: 4px 0 4px;">Run this on your server (Linux):</p>
+    ${codeBlock(`curl -Lo agent https://github.com/iyanou/opensearch-doctor-agent/releases/latest/download/agent-linux-amd64\nchmod +x agent`)}
 
-    <p style="margin: 0; font-weight: 600; color: #374151;">Step 3 — Connect your cluster</p>
-    ${codeBlock(`./osd-agent --api-url https://opensearchdoctor.com --api-key YOUR_AGENT_KEY --cluster-url http://localhost:9200`)}
+    <p style="margin: 0; font-weight: 600; color: #374151;">Step 3 — Run the setup wizard</p>
+    <p style="margin: 4px 0 4px;">The wizard will ask for your cluster URL, credentials, and API key — then configure everything automatically:</p>
+    ${codeBlock(`./agent --init`)}
 
     <p>Within 30 minutes you'll see your first diagnostic session in the dashboard.</p>
 
@@ -118,7 +119,7 @@ export async function sendStuckSetupEmail(to: string, name: string | null) {
     <p style="margin: 0 0 12px; color: #374151;">If your cluster has security enabled, add <code style="background: #f3f4f6; padding: 2px 6px; border-radius: 4px; font-size: 13px;">--cluster-user admin --cluster-password yourpassword</code> to the agent command.</p>
 
     <p style="margin: 8px 0 4px; font-weight: 600;">3. Agent starts but no data appears</p>
-    <p style="margin: 0 0 12px; color: #374151;">The first diagnostic runs 30 minutes after the agent connects. Check the agent logs with <code style="background: #f3f4f6; padding: 2px 6px; border-radius: 4px; font-size: 13px;">./osd-agent --help</code> to see log options.</p>
+    <p style="margin: 0 0 12px; color: #374151;">The first diagnostic runs 30 minutes after the agent connects. Check the agent logs with <code style="background: #f3f4f6; padding: 2px 6px; border-radius: 4px; font-size: 13px;">./agent --help</code> to see log options.</p>
 
     ${btn(APP_URL + "/docs/installation", "View full installation docs")}
 
