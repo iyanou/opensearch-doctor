@@ -15,6 +15,7 @@ import { Resend } from "resend";
 import { prisma } from "@/lib/prisma";
 
 const FROM      = process.env.RESEND_FROM_EMAIL ?? "noreply@opensearchdoctor.com";
+const REPLY_TO  = process.env.SUPPORT_EMAIL     ?? "support@opensearchdoctor.com";
 const APP_URL   = process.env.NEXT_PUBLIC_APP_URL ?? "https://opensearchdoctor.com";
 const SENDER    = "Eraste from OpenSearch Doctor";
 
@@ -96,7 +97,7 @@ export async function sendWelcomeEmail(to: string, name: string | null) {
     <p style="font-size: 14px; margin: 0;">Eraste<br><span style="color: #9ca3af;">Founder, OpenSearch Doctor</span></p>
   `);
 
-  await getResend().emails.send({ from: `${SENDER} <${FROM}>`, to, subject, html });
+  await getResend().emails.send({ from: `${SENDER} <${FROM}>`, replyTo: REPLY_TO, to, subject, html });
 }
 
 // ── Email 2 — Stuck on setup ─────────────────────────────────────────────────
@@ -128,7 +129,7 @@ export async function sendStuckSetupEmail(to: string, name: string | null) {
     <p style="font-size: 14px; margin: 0;">Eraste<br><span style="color: #9ca3af;">Founder, OpenSearch Doctor</span></p>
   `);
 
-  await getResend().emails.send({ from: `${SENDER} <${FROM}>`, to, subject, html });
+  await getResend().emails.send({ from: `${SENDER} <${FROM}>`, replyTo: REPLY_TO, to, subject, html });
 }
 
 // ── Email 3 — Education ───────────────────────────────────────────────────────
@@ -167,7 +168,7 @@ export async function sendEducationEmail(to: string, name: string | null) {
     <p style="font-size: 14px; margin: 0;">Eraste<br><span style="color: #9ca3af;">Founder, OpenSearch Doctor</span></p>
   `);
 
-  await getResend().emails.send({ from: `${SENDER} <${FROM}>`, to, subject, html });
+  await getResend().emails.send({ from: `${SENDER} <${FROM}>`, replyTo: REPLY_TO, to, subject, html });
 }
 
 // ── Email 4 — Trial ending ────────────────────────────────────────────────────
@@ -203,7 +204,7 @@ export async function sendTrialEndingEmail(to: string, name: string | null) {
     <p style="font-size: 14px; margin: 0;">Eraste<br><span style="color: #9ca3af;">Founder, OpenSearch Doctor</span></p>
   `);
 
-  await getResend().emails.send({ from: `${SENDER} <${FROM}>`, to, subject, html });
+  await getResend().emails.send({ from: `${SENDER} <${FROM}>`, replyTo: REPLY_TO, to, subject, html });
 }
 
 // ── Email 5 — Last chance ─────────────────────────────────────────────────────
@@ -229,7 +230,7 @@ export async function sendLastChanceEmail(to: string, name: string | null) {
     <p style="font-size: 14px; margin: 0;">Eraste<br><span style="color: #9ca3af;">Founder, OpenSearch Doctor</span></p>
   `);
 
-  await getResend().emails.send({ from: `${SENDER} <${FROM}>`, to, subject, html });
+  await getResend().emails.send({ from: `${SENDER} <${FROM}>`, replyTo: REPLY_TO, to, subject, html });
 }
 
 // ── Send + track (prevents duplicate sends) ───────────────────────────────────
