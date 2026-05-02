@@ -336,6 +336,36 @@ export default function LandingPage() {
               </div>
             ))}
           </div>
+
+          {/* Quick install block */}
+          <div className="mt-14 max-w-2xl mx-auto">
+            <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground text-center mb-4">
+              Quick install — Linux
+            </p>
+            <div className="rounded-xl bg-[#0f172a] border border-white/10 overflow-hidden shadow-xl">
+              <div className="flex items-center gap-2 px-4 py-2.5 border-b border-white/10">
+                <div className="flex gap-1.5">
+                  <div className="w-2.5 h-2.5 rounded-full bg-red-500/60" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/60" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-green-500/60" />
+                </div>
+                <span className="text-xs text-white/30 ml-1">bash</span>
+              </div>
+              <pre className="px-5 py-4 text-sm font-mono leading-relaxed overflow-x-auto">
+                <span className="text-white/40"># Download the agent</span>{"\n"}
+                <span className="text-emerald-400">curl</span>
+                <span className="text-white"> -Lo agent https://github.com/iyanou/opensearch-doctor-agent/releases/latest/download/agent-linux-amd64</span>{"\n"}
+                <span className="text-emerald-400">chmod</span>
+                <span className="text-white"> +x agent</span>{"\n\n"}
+                <span className="text-white/40"># Run the setup wizard</span>{"\n"}
+                <span className="text-white">./agent --init</span>
+              </pre>
+            </div>
+            <p className="text-center text-xs text-muted-foreground mt-3">
+              macOS and Windows also supported —{" "}
+              <Link href="/docs/installation" className="text-primary hover:underline">see all install options</Link>
+            </p>
+          </div>
         </div>
       </section>
 
@@ -371,6 +401,47 @@ export default function LandingPage() {
         <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
           — used by OpenSearch operators running clusters on EC2, Kubernetes, and bare metal —
         </p>
+      </section>
+
+      {/* ── Founder story ────────────────────────────────────────────── */}
+      <section className="max-w-3xl mx-auto px-4 sm:px-6 pb-24">
+        <div className="rounded-2xl border border-border/60 bg-card p-8 sm:p-10 relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-1 h-full bg-primary rounded-l-2xl" />
+          <div className="pl-2">
+            <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-6">Why we built this</p>
+            <div className="space-y-4 text-sm text-muted-foreground leading-relaxed">
+              <p>
+                In 2025 we launched <strong className="text-foreground">ElasticDoctor</strong> — a monitoring tool for Elasticsearch clusters.
+                It failed within weeks.
+              </p>
+              <p>
+                Engineers refused to paste their cluster credentials into a web form. Rightfully so — we would have refused too.
+                Our architecture also required clusters to be publicly internet-accessible. Another non-starter for anyone
+                running internal infrastructure.
+              </p>
+              <p>
+                Then Elastic released AutoOps. Hard to compete with the vendor itself.
+              </p>
+              <p>
+                So we stopped and thought about what engineers actually need.
+                The answer was clear: <strong className="text-foreground">monitoring that comes from your environment, not reaches into it.</strong>
+              </p>
+              <p>
+                That&apos;s OpenSearch Doctor. A local agent that never touches your credentials, works behind firewalls,
+                and sends only diagnostic metrics — built for the open-source fork that Elastic doesn&apos;t monitor for you.
+              </p>
+            </div>
+            <div className="mt-6 pt-6 border-t border-border/60 flex items-center gap-3">
+              <div className="w-9 h-9 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-sm font-bold text-primary">
+                E
+              </div>
+              <div>
+                <p className="text-sm font-semibold">Eraste Akande</p>
+                <p className="text-xs text-muted-foreground">Founder, OpenSearch Doctor</p>
+              </div>
+            </div>
+          </div>
+        </div>
       </section>
 
       {/* ── Pricing ──────────────────────────────────────────────────── */}
