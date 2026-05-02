@@ -142,7 +142,7 @@ See `web/prisma/schema.prisma` for full schema.
 | `users` | User accounts (OAuth + email/password) |
 | `accounts` | OAuth provider accounts (NextAuth) |
 | `sessions` | User sessions (NextAuth) |
-| `subscriptions` | Stripe subscription state |
+| `subscriptions` | PayPal subscription state |
 | `teams` | Pro: team workspaces |
 | `team_members` | Pro: team membership + roles |
 | `clusters` | Registered OpenSearch clusters |
