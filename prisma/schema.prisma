@@ -36,6 +36,7 @@ model User {
   ownedTeams           Team[]                @relation("TeamOwner")
   notificationChannels NotificationChannel[]
   auditLogs            AuditLog[]
+  onboardingEmails     OnboardingEmail[]
 
   @@map("users")
 }
@@ -501,6 +502,23 @@ enum ReportType {
   ON_DEMAND
   WEEKLY
   MONTHLY
+}
+
+// ─────────────────────────────────────────────────────────────
+// ONBOARDING EMAILS — tracks which emails were sent per user
+// ─────────────────────────────────────────────────────────────
+
+model OnboardingEmail {
+  id        String   @id @default(cuid())
+  userId    String
+  emailType String   // WELCOME | STUCK_SETUP | EDUCATION | TRIAL_ENDING | LAST_CHANCE
+  sentAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, emailType])
+  @@index([userId])
+  @@map("onboarding_emails")
 }
 
 // ─────────────────────────────────────────────────────────────

@@ -2,6 +2,7 @@ import NextAuth from "next-auth";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import Google from "next-auth/providers/google";
 import { prisma } from "@/lib/prisma";
+import { sendOnboardingEmail } from "@/lib/email/onboarding";
 
 const isProd = process.env.NODE_ENV === "production";
 
@@ -57,6 +58,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       },
     }),
   ],
+  events: {
+    async createUser({ user }) {
+      // Fire welcome email immediately on every new signup — do not await (non-blocking)
+      if (user.email) {
+        sendOnboardingEmail(user.id!, user.email, user.name ?? null, "WELCOME").catch(
+          (err) => console.error("[onboarding] Welcome email failed:", err)
+        );
+      }
+    },
+  },
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
