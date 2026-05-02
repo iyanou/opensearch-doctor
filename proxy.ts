@@ -10,6 +10,8 @@ const PUBLIC_PREFIXES = [
   "/contact",
   "/blog",
   "/docs",
+  "/sitemap.xml",
+  "/robots.txt",
   "/api/auth",
   "/api/agent",
   "/api/webhooks",
