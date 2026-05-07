@@ -2,11 +2,16 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { AlertsList } from "@/components/alerts/alerts-list";
-import { Bell, CheckCircle2, Flame } from "lucide-react";
+import { Bell, CheckCircle2, Flame, MessageSquare, Globe, Lock, Zap } from "lucide-react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 export default async function AlertsPage() {
   const session = await auth();
   const userId = session!.user!.id!;
+
+  const userPlan = await prisma.user.findUnique({ where: { id: userId }, select: { plan: true } });
+  const isStarterUser = userPlan?.plan === "STARTER";
 
   const [firing, recent] = await Promise.all([
     prisma.alertEvent.findMany({
@@ -35,6 +40,51 @@ export default async function AlertsPage() {
         description="Proactive notifications across all your clusters"
       />
       <div className="p-4 md:p-6 max-w-4xl space-y-8">
+
+        {/* Slack/Webhook teaser — STARTER users only */}
+        {isStarterUser && (
+          <div className="rounded-xl border border-border/60 bg-card p-5">
+            <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-4">Notification channels</p>
+            <div className="space-y-3">
+              {/* Email — available */}
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200/60 dark:border-emerald-500/20">
+                <Bell className="w-4 h-4 text-emerald-600 shrink-0" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium">Email alerts</p>
+                  <p className="text-xs text-muted-foreground">Receive alerts by email — active on your plan</p>
+                </div>
+                <span className="text-[10px] font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-500/15 px-2 py-0.5 rounded-full">Active</span>
+              </div>
+              {/* Slack — locked */}
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/40 border border-border/40 opacity-70">
+                <MessageSquare className="w-4 h-4 text-muted-foreground shrink-0" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-muted-foreground">Slack alerts</p>
+                  <p className="text-xs text-muted-foreground">Get notified directly in your Slack workspace</p>
+                </div>
+                <Lock className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+              </div>
+              {/* Webhook — locked */}
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/40 border border-border/40 opacity-70">
+                <Globe className="w-4 h-4 text-muted-foreground shrink-0" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-muted-foreground">Webhook alerts</p>
+                  <p className="text-xs text-muted-foreground">Send alerts to PagerDuty, OpsGenie, or any endpoint</p>
+                </div>
+                <Lock className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+              </div>
+            </div>
+            <div className="mt-4 flex items-center justify-between gap-3 flex-wrap">
+              <p className="text-xs text-muted-foreground">Slack and webhook alerts are available on Pro plan ($99/mo)</p>
+              <Link href="/settings?tab=billing">
+                <Button size="sm" variant="outline" className="gap-1.5 h-8 text-xs">
+                  <Zap className="w-3 h-3" /> Upgrade to Pro
+                </Button>
+              </Link>
+            </div>
+          </div>
+        )}
+
         {firing.length === 0 && recent.length === 0 ? (
           <AllClearState />
         ) : (

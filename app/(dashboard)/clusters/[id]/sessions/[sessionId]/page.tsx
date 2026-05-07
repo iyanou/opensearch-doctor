@@ -7,7 +7,7 @@ import { HealthScore } from "@/components/clusters/health-score";
 import { FindingsList } from "@/components/clusters/findings-list";
 import { NodesTable } from "@/components/clusters/nodes-table";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, CheckCircle2, XCircle, Loader2, Download, Clock, Tag, Gauge } from "lucide-react";
+import { ArrowLeft, CheckCircle2, XCircle, Loader2, Download, Clock, Tag, Gauge, Zap, Bell } from "lucide-react";
 import { formatDuration } from "@/lib/format";
 
 export default async function SessionDetailPage({
@@ -19,10 +19,14 @@ export default async function SessionDetailPage({
   const userId = session!.user!.id!;
   const { id, sessionId } = await params;
 
-  const cluster = await prisma.cluster.findFirst({
-    where: { id, userId },
-    select: { id: true, name: true, endpoint: true },
-  });
+  const [cluster, userPlan] = await Promise.all([
+    prisma.cluster.findFirst({
+      where: { id, userId },
+      select: { id: true, name: true, endpoint: true },
+    }),
+    prisma.user.findUnique({ where: { id: userId }, select: { plan: true } }),
+  ]);
+  const isTrialUser = userPlan?.plan === "FREE_TRIAL";
   if (!cluster) notFound();
 
   const diagSession = await prisma.diagnosticSession.findFirst({
@@ -134,6 +138,28 @@ export default async function SessionDetailPage({
           <div className="rounded-xl border border-border/60 bg-card py-12 text-center">
             <CheckCircle2 className="w-8 h-8 text-emerald-500 mx-auto mb-3" />
             <p className="text-sm font-semibold text-emerald-600">No findings — cluster looked healthy</p>
+          </div>
+        )}
+
+        {/* Upgrade prompt — shown to trial users when issues were found */}
+        {isTrialUser && (critCount + warnCount) > 0 && (
+          <div className="rounded-xl border border-primary/20 bg-primary/5 p-5 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+              <Bell className="w-5 h-5 text-primary" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold">
+                {critCount + warnCount} issue{(critCount + warnCount) > 1 ? "s" : ""} found — get alerted automatically next time
+              </p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Upgrade to Starter to receive email alerts whenever your cluster health changes, without waiting for the next diagnostic.
+              </p>
+            </div>
+            <Link href="/settings?tab=billing" className="shrink-0">
+              <Button size="sm" className="gap-1.5 whitespace-nowrap">
+                <Zap className="w-3.5 h-3.5" /> Upgrade to Starter — $39/mo
+              </Button>
+            </Link>
           </div>
         )}
 

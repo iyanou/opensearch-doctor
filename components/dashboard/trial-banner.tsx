@@ -32,7 +32,7 @@ export function TrialBanner({ daysLeft }: TrialBannerProps) {
             className="h-7 text-xs gap-1.5"
             variant={urgent ? "default" : "outline"}
           >
-            <Zap className="w-3 h-3" /> Upgrade to Pro
+            <Zap className="w-3 h-3" /> Upgrade to Starter
           </Button>
         </Link>
       </div>
