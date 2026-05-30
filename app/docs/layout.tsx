@@ -1,10 +1,11 @@
 import Link from "next/link";
-import { Activity, ArrowLeft, Book, Settings, ListChecks, HelpCircle, Download } from "lucide-react";
+import { Activity, ArrowLeft, Book, Settings, ListChecks, HelpCircle, Download, ShieldCheck } from "lucide-react";
 
 const NAV = [
   { href: "/docs/installation",   label: "Installation",      icon: Download },
   { href: "/docs/configuration",  label: "Configuration",     icon: Settings },
   { href: "/docs/checks",         label: "What it checks",    icon: ListChecks },
+  { href: "/docs/security",       label: "Security setup",    icon: ShieldCheck },
   { href: "/docs/faq",            label: "FAQ",               icon: HelpCircle },
 ];
 

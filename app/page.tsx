@@ -44,7 +44,7 @@ const FEATURES = [
   {
     icon: Lock,
     title: "Zero credential exposure",
-    body: "Deploy in your VPC, behind a firewall, or on an air-gapped network. The agent connects outbound only. Your cluster endpoint never needs to be exposed.",
+    body: "The agent only uses cluster metadata APIs — health, node stats, shard info. It never calls _search or reads your indexed documents. Create a minimal-permission role to verify this yourself.",
     color: "text-slate-600 bg-slate-100 dark:bg-slate-900/20",
   },
 ];
@@ -161,6 +161,7 @@ export default function LandingPage() {
               { icon: Shield, label: "Credentials never leave your network" },
               { icon: Server, label: "No inbound port changes required" },
               { icon: Lock,   label: "Works behind VPNs & firewalls" },
+              { icon: X,      label: "We never read your indexed data" },
             ].map(({ icon: Icon, label }) => (
               <span
                 key={label}
